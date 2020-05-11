@@ -1,0 +1,80 @@
+{
+  "name": "Data drift detector Python flex template",
+  "description": "Data drift detector Python flex template.",
+  "parameters": [
+    {
+      "name": "request_response_log_table",
+      "label": "Request response log table.",
+      "helpText": "A full name of the BQ request-response log table",
+      "regexes": [
+        "[-_.a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "instance_type",
+      "label": "Instance type.",
+      "helpText": "A type of instances in request_response log_table",
+      "regexes": [
+        "LIST|OBJECT"
+      ]
+    },
+    {
+      "name": "feature_names",
+      "label": "Feature names.",
+      "helpText": "A list of feature names for instances in simple list format.",
+      "is_optional": true,
+      "regexes": [
+        "[,-_a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "start_time",
+      "label": "Start time.",
+      "helpText": "A time window start time in YYYY-MM-DDTHH:MM:SS format.",
+      "regexes": [
+        "[-:T0-9]+"
+      ]
+    },
+    {
+      "name": "end_time",
+      "label": "End time.",
+      "helpText": "A time window end time in YYYY-MM-DDTHH:MM:SS format.",
+      "regexes": [
+        "[-:T0-9]+"
+      ]
+    },
+    {
+      "name": "output_path",
+      "label": "Output path.",
+      "helpText": "The output path for stats and anomalies protobufs.",
+      "regexes": [
+        "gs://[-_./a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "setup_file",
+      "label": "Setup file.",
+      "helpText": "Setup file.",
+      "regexes": [
+        "[-_./a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "schema_file",
+      "label": "Schema file.",
+      "helpText": "A GCS path to schema file.",
+      "regexes": [
+        "gs://[-_./a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "baseline_stats_file",
+      "label": "Baseline stats file.",
+      "helpText": "A GCS path to a baseline statistics file.",
+      "is_optional": true,
+      "regexes": [
+        "gs://[-_./a-zA-Z0-9]+"
+      ]
+    }
+  ]
+}

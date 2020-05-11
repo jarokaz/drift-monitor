@@ -1,0 +1,1 @@
+[{"name": "model", "type": "STRING", "mode": "REQUIRED"}, {"name": "model_version", "type": "STRING", "mode": "REQUIRED"}, {"name": "time", "type": "TIMESTAMP", "mode": "REQUIRED"}, {"name": "raw_data", "type": "STRING", "mode": "REQUIRED"}, {"name": "raw_prediction", "type": "STRING", "mode": "NULLABLE"}, {"name": "groundtruth", "type": "STRING", "mode": "NULLABLE"}]
