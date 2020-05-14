@@ -1,4 +1,0 @@
-pandas
-google-api-python-client
-gcsfs
-
