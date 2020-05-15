@@ -44,7 +44,7 @@ def generate_predict_tasks(
                 instances: List[Union[Dict,List]],
                 execute_time: datetime):
                         
-        """Creates a task that calls AI Platform Prediction service.
+        """Creates a task that calls AI Platform Prediction service."""
         
         client = tasks_v2.CloudTasksClient()
         parent = client.queue_path(project, location, queue)
