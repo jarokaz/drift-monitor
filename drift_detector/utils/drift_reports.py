@@ -36,8 +36,8 @@ from tensorflow_data_validation.utils import batch_util
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
 
-from coders.beam_example_coder import JSONObjectCoder
-from coders.beam_example_coder import SimpleListCoder
+from coders.beam_example_coders import JSONObjectCoder
+from coders.beam_example_coders import SimpleListCoder
 
 _STATS_FILENAME='stats.pb'
 _ANOMALIES_FILENAME='anomalies.pbtxt'
@@ -45,7 +45,7 @@ _ANOMALIES_FILENAME='anomalies.pbtxt'
 GCSPath = Union[bytes, Text]
 
 def _generate_query(table_name, start_time, end_time):
-  """Prepares the data sampling query."""
+  """Prepares a data sampling query."""
 
   sampling_query_template = """
        SELECT *
@@ -118,7 +118,7 @@ def generate_drift_reports(
             raise TypeError("Unsupported instance type")
             
         stats = (examples
-                | 'BeamExamplesToArrow' >> batch_util.BatchExamplesToArrowTables()
+                | 'BeamExamplesToArrow' >> batch_util.BatchExamplesToArrowRecordBatches()
                 | 'GenerateStatistics' >> tfdv.GenerateStatistics(stats_options)
                 )
         

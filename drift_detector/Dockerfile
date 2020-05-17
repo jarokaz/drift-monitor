@@ -18,12 +18,10 @@ ARG WORKDIR=/dataflow/template
 RUN mkdir -p ${WORKDIR}
 WORKDIR ${WORKDIR}
 
-COPY *.sh ./
 COPY *.py ./
 COPY coders/*.py coders/
 COPY utils/*.py utils/
 
-#ENV FLEX_TEMPLATE_PYTHON_REQUIREMENTS_FILE="${WORKDIR}/requirements.txt"
-ENV FLEX_TEMPLATE_PYTHON_PY_FILE="${WORKDIR}/run.py"
-
 RUN pip install -U  tensorflow_data_validation==0.21.5 jinja2
+
+ENV FLEX_TEMPLATE_PYTHON_PY_FILE="${WORKDIR}/run.py"

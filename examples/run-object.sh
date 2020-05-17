@@ -12,8 +12,8 @@ Hillshade_3pm,\
 Horizontal_Distance_To_Fire_Points,\
 Wilderness_Area,\
 Soil_Type
-START_TIME=2020-05-09T5:05:14
-END_TIME=2020-05-09T18:05:14
+START_TIME=2020-05-15T00:15:00
+END_TIME=2020-05-15T05:51:00
 OUTPUT_PATH=gs://mlops-dev-workspace/drift_monitor/output/tf
 DATAFLOW_GCS_LOCATION=gs://mlops-dev-workspace/drift_monitor/dataflow
 SCHEMA_FILE=gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt
@@ -21,7 +21,7 @@ BASELINE_STATS_FILE=gs://mlops-dev-workspace/drift_monitor/baseline_stats/stats.
 INSTANCE_TYPE=OBJECT
 
 PROJECT_ID=mlops-dev-env
-RUNNER=DataflowRunner
+RUNNER=DirectRunner
 SETUP_FILE=./setup.py
 
 python run.py --project $PROJECT_ID \

@@ -47,13 +47,6 @@ from utils.drift_reports import InstanceType
 
 
 if __name__ == '__main__':
-    # Cloud Logging would contain only logging.INFO and higher level logs logged
-    # by the root logger. All log statements emitted by the root logger will be
-    # visible in the Cloud Logging UI. Learn more at
-    # https://cloud.google.com/logging about the Cloud Logging UI.
-    #
-    # You can set the default logging level to a different level when running
-    # locally.
     logging.getLogger().setLevel(logging.INFO)
     
     parser = argparse.ArgumentParser()
@@ -119,7 +112,6 @@ if __name__ == '__main__':
     start_time = known_args.start_time
     end_time = known_args.end_time
     
-    stats_options = stats_options.StatsOptions()
     schema = tfdv.load_schema_text(known_args.schema_file)
     
     pipeline_options = PipelineOptions(pipeline_args)   

@@ -40,10 +40,9 @@ _LOGGING_TABLE_SCHEMA = {
   'groundtruth': lambda x: type(x) is str
 }
 
-LOG_RECORD = Dict
 
 
-def _validate_request_response_log_schema(log_record: LOG_RECORD):
+def _validate_request_response_log_schema(log_record: Dict):
     """Validates that log record conforms to schema."""
     
     incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
@@ -58,7 +57,7 @@ def _validate_request_response_log_schema(log_record: LOG_RECORD):
                        features_with_wrong_type)
     
     
-@beam.typehints.with_input_types(LOG_RECORD)
+@beam.typehints.with_input_types(Dict)
 @beam.typehints.with_output_types(types.BeamExample)
 class JSONObjectCoder(beam.DoFn):
   """A DoFn which converts an AI Platform Prediction input with instances in 
@@ -69,7 +68,7 @@ class JSONObjectCoder(beam.DoFn):
       constants.METRICS_NAMESPACE, "example_size")
       
 
-  def process(self, log_record: LOG_RECORD):
+  def process(self, log_record: Dict):
     
     _validate_request_response_log_schema(log_record)
  
@@ -84,7 +83,7 @@ class JSONObjectCoder(beam.DoFn):
             
       
 
-@beam.typehints.with_input_types(LOG_RECORD)
+@beam.typehints.with_input_types(Dict)
 @beam.typehints.with_output_types(types.BeamExample)
 class SimpleListCoder(beam.DoFn):
   """A DoFn which converts an AI Platform Prediction input with instances in 
@@ -97,7 +96,7 @@ class SimpleListCoder(beam.DoFn):
     self._feature_names = feature_names
       
 
-  def process(self, log_record: LOG_RECORD):
+  def process(self, log_record: Dict):
     
     _validate_request_response_log_schema(log_record)
             
