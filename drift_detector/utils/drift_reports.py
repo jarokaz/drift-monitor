@@ -32,7 +32,7 @@ from jinja2 import Template
 
 from tensorflow_data_validation import GenerateStatistics
 from tensorflow_data_validation import validate_statistics
-from tensorflow_data_validation.utils import batch_util
+from tensorflow_data_validation import DecodeTFExample
 
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
@@ -117,7 +117,7 @@ def generate_drift_reports(
             raise TypeError("Unsupported instance type")
             
         stats = (examples
-                | 'BeamExamplesToArrow' >> batch_util.BatchExamplesToArrowRecordBatches()
+                | 'TFExamplesToArrow' >> DecodeTFExample()
                 | 'GenerateStatistics' >> GenerateStatistics()
                 )
         
