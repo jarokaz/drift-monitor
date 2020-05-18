@@ -32,13 +32,14 @@ from jinja2 import Template
 
 from tensorflow_data_validation import GenerateStatistics
 from tensorflow_data_validation import validate_statistics
-from tensorflow_data_validation import DecodeTFExample
+from tensorflow_data_validation import utils
 
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
 
-from coders.log_to_example_coders import JSONObjectCoder
-from coders.log_to_example_coders import SimpleListCoder
+from coders.beam_example_coders import JSONObjectCoder
+from coders.beam_example_coders import SimpleListCoder
+
 
 _STATS_FILENAME='stats.pb'
 _ANOMALIES_FILENAME='anomalies.pbtxt'
@@ -115,9 +116,10 @@ def generate_drift_reports(
                        | 'JSONObjectInstancesToBeamExamples' >> beam.ParDo(JSONObjectCoder()))  
         else:
             raise TypeError("Unsupported instance type")
-            
+
+
         stats = (examples
-                | 'TFExamplesToArrow' >> DecodeTFExample()
+                | 'BeamExamplesToArrow' >> utils.batch_util.BatchExamplesToArrowRecordBatches() 
                 | 'GenerateStatistics' >> GenerateStatistics()
                 )
         

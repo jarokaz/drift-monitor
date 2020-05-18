@@ -1,0 +1,254 @@
+baseline {
+  feature {
+    name: "Soil_Type"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: BYTES
+    domain: "Soil_Type"
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Wilderness_Area"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: BYTES
+    domain: "Wilderness_Area"
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Aspect"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Cover_Type"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    int_domain {
+      name: "Cover_Type"
+      min: 0
+      max: 6
+      is_categorical: true
+    }
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Elevation"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Hillshade_3pm"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Hillshade_9am"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Hillshade_Noon"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Horizontal_Distance_To_Fire_Points"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Horizontal_Distance_To_Hydrology"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Horizontal_Distance_To_Roadways"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Slope"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    int_domain {
+      name: "Slope"
+      min: 0
+      max: 90
+    }
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  feature {
+    name: "Vertical_Distance_To_Hydrology"
+    value_count {
+      min: 1
+      max: 1
+    }
+    type: INT
+    presence {
+      min_fraction: 1.0
+      min_count: 1
+    }
+  }
+  string_domain {
+    name: "Soil_Type"
+    value: "C2702"
+    value: "C2703"
+    value: "C2704"
+    value: "C2705"
+    value: "C2706"
+    value: "C2717"
+    value: "C3501"
+    value: "C3502"
+    value: "C4201"
+    value: "C4703"
+    value: "C4704"
+    value: "C4744"
+    value: "C4758"
+    value: "C5101"
+    value: "C5151"
+    value: "C6101"
+    value: "C6102"
+    value: "C6731"
+    value: "C7101"
+    value: "C7102"
+    value: "C7103"
+    value: "C7201"
+    value: "C7202"
+    value: "C7700"
+    value: "C7701"
+    value: "C7702"
+    value: "C7709"
+    value: "C7710"
+    value: "C7745"
+    value: "C7746"
+    value: "C7755"
+    value: "C7756"
+    value: "C7757"
+    value: "C7790"
+    value: "C8703"
+    value: "C8707"
+    value: "C8708"
+    value: "C8771"
+    value: "C8772"
+    value: "C8776"
+  }
+  string_domain {
+    name: "Wilderness_Area"
+    value: "Cache"
+    value: "Commanche"
+    value: "Neota"
+    value: "Rawah"
+  }
+}
+anomaly_info {
+  key: "Cover_Type"
+  value {
+    description: "Column is completely missing"
+    severity: ERROR
+    short_description: "Column dropped"
+    reason {
+      type: SCHEMA_MISSING_COLUMN
+      short_description: "Column dropped"
+      description: "Column is completely missing"
+    }
+    path {
+      step: "Cover_Type"
+    }
+  }
+}
+anomaly_info {
+  key: "Soil_Type"
+  value {
+    description: "Examples contain values missing from the schema: 2702 (<1%), 2703 (~1%), 2704 (<1%), 2705 (~2%), 2706 (<1%), 2717 (~1%), 4201 (<1%), 4703 (~6%), 4704 (~2%), 4744 (~4%), 4758 (~2%), 5101 (<1%), 6101 (<1%), 6102 (<1%), 6731 (<1%), 7101 (<1%), 7102 (<1%), 7103 (<1%), 7201 (~5%), 7202 (~9%), 7700 (~2%), 7701 (<1%), 7702 (<1%), 7710 (<1%), 7745 (~22%), 7746 (~4%), 7755 (~4%), 7756 (~9%), 7757 (~7%), 7790 (<1%), 8703 (<1%), 8707 (<1%), 8771 (~3%), 8772 (~1%), 8776 (~1%). "
+    severity: ERROR
+    short_description: "Unexpected string values"
+    reason {
+      type: ENUM_TYPE_UNEXPECTED_STRING_VALUES
+      short_description: "Unexpected string values"
+      description: "Examples contain values missing from the schema: 2702 (<1%), 2703 (~1%), 2704 (<1%), 2705 (~2%), 2706 (<1%), 2717 (~1%), 4201 (<1%), 4703 (~6%), 4704 (~2%), 4744 (~4%), 4758 (~2%), 5101 (<1%), 6101 (<1%), 6102 (<1%), 6731 (<1%), 7101 (<1%), 7102 (<1%), 7103 (<1%), 7201 (~5%), 7202 (~9%), 7700 (~2%), 7701 (<1%), 7702 (<1%), 7710 (<1%), 7745 (~22%), 7746 (~4%), 7755 (~4%), 7756 (~9%), 7757 (~7%), 7790 (<1%), 8703 (<1%), 8707 (<1%), 8771 (~3%), 8772 (~1%), 8776 (~1%). "
+    }
+    path {
+      step: "Soil_Type"
+    }
+  }
+}
+anomaly_name_format: SERIALIZED_PATH

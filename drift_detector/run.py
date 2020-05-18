@@ -28,7 +28,6 @@ import os
 from typing import List, Optional, Text, Union, Dict, Iterable
 
 import apache_beam as beam
-import pyarrow 
 
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
@@ -101,11 +100,10 @@ if __name__ == '__main__':
     else:
         raise TypeError("The instance_type parameter must be LIST or OBJECT")
     
-    #if known_args.baseline_stats_file:
-       # baseline_stats = load_statistics(known_args.baseline_stats_file)
-    #else:
-    #    baseline_stats = None
-    baseline_stats = None
+    if known_args.baseline_stats_file:
+        baseline_stats = load_statistics(known_args.baseline_stats_file)
+    else:
+        baseline_stats = None
         
     start_time = known_args.start_time
     end_time = known_args.end_time
