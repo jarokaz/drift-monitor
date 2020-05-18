@@ -125,7 +125,7 @@ class SimpleListCoder(beam.DoFn):
         raise TypeError("The provided feature list does not match the length of an instance.")
                 
     for instance in raw_data[_INSTANCES_KEY]:
-        instance =  {name: [value])
+        instance =  {name: [value]
             for name, value in zip(self._feature_names, instance)}
         yield _serialize_example(instance)
             

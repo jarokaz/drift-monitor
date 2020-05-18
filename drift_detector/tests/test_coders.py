@@ -41,24 +41,28 @@ _covertype_feature_description = {
     'Horizontal_Distance_To_Roadways': tf.io.VarLenFeature(tf.int64),
 }
 
+_feature_names = ['Elevation', 'Aspect', 'Slope', 'Horizontal_Distance_To_Hydrology',
+       'Vertical_Distance_To_Hydrology', 'Horizontal_Distance_To_Roadways',
+       'Hillshade_9am', 'Hillshade_Noon', 'Hillshade_3pm',
+       'Horizontal_Distance_To_Fire_Points', 'Wilderness_Area', 'Soil_Type']
+
 _log_record_object_format = {
     "model": "covertype_classifier_tf",
     "model_version": "v2",
     "time": "2020-05-17 10:30:00 UTC",
     "raw_data": '{"instances": [{"Elevation": [3716, 3717], "Aspect": [336, 337], "Slope": [9, 8], "Horizontal_Distance_To_Hydrology": [1026, 1027], "Vertical_Distance_To_Hydrology": [270, 271], "Horizontal_Distance_To_Roadways": [5309, 5319], "Hillshade_9am": [203, 204], "Hillshade_Noon": [230, 231], "Hillshade_3pm": [166, 167], "Horizontal_Distance_To_Fire_Points": [3455, 3444], "Wilderness_Area": ["Commanche", "Aaaa"], "Soil_Type": ["8776", "9999"]}, {"Elevation": [3225], "Aspect": [326], "Slope": [9], "Horizontal_Distance_To_Hydrology": [342], "Vertical_Distance_To_Hydrology": [0], "Horizontal_Distance_To_Roadways": [5500], "Hillshade_9am": [198], "Hillshade_Noon": [230], "Hillshade_3pm": [172], "Horizontal_Distance_To_Fire_Points": [1725], "Wilderness_Area": ["Rawah"], "Soil_Type": ["7201"]}]}',
     "raw_prediction": '{"predictions": [[4.21827644e-06, 1.45283067e-07, 6.71478847e-21, 4.34945702e-21, 5.18628625e-31, 1.35843754e-22, 0.999995589], [0.948056221, 0.0518435165, 2.80540131e-12, 4.14544565e-14, 8.18011e-10, 1.02051131e-10, 0.000100270954]]}',
-    "groundtruth": "null"
+    "groundtruth": "NaN"
   }
 
 _log_record_list_format = {
     "model": "covertype_classifier_sklearn",
     "model_version": "v2",
     "time": "2020-05-17 10:30:00 UTC",
-    "raw_data": '{"instances": [{"Elevation": [3716, 3717], "Aspect": [336, 337], "Slope": [9, 8], "Horizontal_Distance_To_Hydrology": [1026, 1027], "Vertical_Distance_To_Hydrology": [270, 271], "Horizontal_Distance_To_Roadways": [5309, 5319], "Hillshade_9am": [203, 204], "Hillshade_Noon": [230, 231], "Hillshade_3pm": [166, 167], "Horizontal_Distance_To_Fire_Points": [3455, 3444], "Wilderness_Area": ["Commanche", "Aaaa"], "Soil_Type": ["8776", "9999"]}, {"Elevation": [3225], "Aspect": [326], "Slope": [9], "Horizontal_Distance_To_Hydrology": [342], "Vertical_Distance_To_Hydrology": [0], "Horizontal_Distance_To_Roadways": [5500], "Hillshade_9am": [198], "Hillshade_Noon": [230], "Hillshade_3pm": [172], "Horizontal_Distance_To_Fire_Points": [1725], "Wilderness_Area": ["Rawah"], "Soil_Type": ["7201"]}]}',
-    "raw_prediction": '{"predictions": [[4.21827644e-06, 1.45283067e-07, 6.71478847e-21, 4.34945702e-21, 5.18628625e-31, 1.35843754e-22, 0.999995589], [0.948056221, 0.0518435165, 2.80540131e-12, 4.14544565e-14, 8.18011e-10, 1.02051131e-10, 0.000100270954]]}',
-    "groundtruth": "null"
+    "raw_data": '{"instances": [[3012, 84, 7, 309, 50, 361, 230, 228, 131, 1205, "Rawah", "7202"], [3058, 181, 16, 42, 10, 1803, 224, 248, 152, 421, "Commanche", "4758"]]}',
+    "raw_prediction": '{"predictions": [0, 1, 1]}',
+    "groundtruth": "NaN"
   }
-
 
 def _convert_to_dense(x):
     default_value = '' if x.dtype == tf.string else 0
@@ -69,20 +73,24 @@ def _convert_to_dense(x):
 def test_object_coder():
     coder = JSONObjectCoder()
     examples = coder.process(_log_record_object_format)
-    first_example = tf.io.parse_single_example(next(examples),
+    example = tf.io.parse_single_example(next(examples),
                                             _covertype_feature_description)
-    print(first_example)
-    second_example = tf.io.parse_single_example(next(examples),
+    example = {key: _convert_to_dense(value) for key, value in example.items()}
+    print(example)
+    example = tf.io.parse_single_example(next(examples),
                                             _covertype_feature_description)
-    print(second_example)
+    example = {key: _convert_to_dense(value) for key, value in example.items()}
+    print(example)
 
 
 def test_list_coder():
-    coder = JSONObjectCoder()
-    examples = coder.process(_log_record)
-    first_example = tf.io.parse_single_example(next(examples),
+    coder = SimpleListCoder(_feature_names)
+    examples = coder.process(_log_record_list_format)
+    example = tf.io.parse_single_example(next(examples),
                                             _covertype_feature_description)
-    print(first_example)
-    second_example = tf.io.parse_single_example(next(examples),
+    example = {key: _convert_to_dense(value) for key, value in example.items()}
+    print(example)
+    example = tf.io.parse_single_example(next(examples),
                                             _covertype_feature_description)
-    print(second_example)
+    example = {key: _convert_to_dense(value) for key, value in example.items()}
+    print(example)
