@@ -64,7 +64,6 @@ class JSONObjectCoder(beam.DoFn):
     self._example_size = beam.metrics.Metrics.counter(
       constants.METRICS_NAMESPACE, "example_size")
       
-
   def process(self, log_record: Dict):
     
     _validate_request_response_log_schema(log_record)
@@ -91,7 +90,6 @@ class SimpleListCoder(beam.DoFn):
       constants.METRICS_NAMESPACE, "example_size")
     
     self._feature_names = feature_names
-      
 
   def process(self, log_record: Dict):
     
