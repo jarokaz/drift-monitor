@@ -37,8 +37,8 @@ from tensorflow_data_validation.utils import batch_util
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
 
-from coders.beam_example_coders import JSONObjectCoder
-from coders.beam_example_coders import SimpleListCoder
+from coders.log_to_example_coders import JSONObjectCoder
+from coders.log_to_example_coders import SimpleListCoder
 
 _STATS_FILENAME='stats.pb'
 _ANOMALIES_FILENAME='anomalies.pbtxt'
