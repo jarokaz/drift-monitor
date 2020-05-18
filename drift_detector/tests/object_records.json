@@ -1,0 +1,18 @@
+[
+  {
+    "model": "covertype_classifier_tf",
+    "model_version": "v2",
+    "time": "2020-05-17 10:30:00 UTC",
+    "raw_data": "{\"instances\": [{\"Elevation\": [3716], \"Aspect\": [336], \"Slope\": [8], \"Horizontal_Distance_To_Hydrology\": [1026], \"Vertical_Distance_To_Hydrology\": [270], \"Horizontal_Distance_To_Roadways\": [5309], \"Hillshade_9am\": [203], \"Hillshade_Noon\": [230], \"Hillshade_3pm\": [166], \"Horizontal_Distance_To_Fire_Points\": [3455], \"Wilderness_Area\": [\"Commanche\"], \"Soil_Type\": [\"8776\"]}, {\"Elevation\": [3225], \"Aspect\": [326], \"Slope\": [9], \"Horizontal_Distance_To_Hydrology\": [342], \"Vertical_Distance_To_Hydrology\": [0], \"Horizontal_Distance_To_Roadways\": [5500], \"Hillshade_9am\": [198], \"Hillshade_Noon\": [230], \"Hillshade_3pm\": [172], \"Horizontal_Distance_To_Fire_Points\": [1725], \"Wilderness_Area\": [\"Rawah\"], \"Soil_Type\": [\"7201\"]}, {\"Elevation\": [3010], \"Aspect\": [258], \"Slope\": [10], \"Horizontal_Distance_To_Hydrology\": [641], \"Vertical_Distance_To_Hydrology\": [-58], \"Horizontal_Distance_To_Roadways\": [1756], \"Hillshade_9am\": [195], \"Hillshade_Noon\": [246], \"Hillshade_3pm\": [189], \"Horizontal_Distance_To_Fire_Points\": [2257], \"Wilderness_Area\": [\"Commanche\"], \"Soil_Type\": [\"7755\"]}]}",
+    "raw_prediction": "{\n    \"predictions\": [[4.21827644e-06, 1.45283067e-07, 6.71478847e-21, 4.34945702e-21, 5.18628625e-31, 1.35843754e-22, 0.999995589], [0.948056221, 0.0518435165, 2.80540131e-12, 4.14544565e-14, 8.18011e-10, 1.02051131e-10, 0.000100270954], [0.109467082, 0.890498519, 3.86167045e-07, 4.06440819e-11, 2.92144305e-05, 1.3952772e-06, 3.38865038e-06]\n    ]\n}",
+    "groundtruth": null
+  },
+  {
+    "model": "covertype_classifier_tf",
+    "model_version": "v2",
+    "time": "2020-05-17 10:32:00 UTC",
+    "raw_data": "{\"instances\": [{\"Elevation\": [3466], \"Aspect\": [43], \"Slope\": [27], \"Horizontal_Distance_To_Hydrology\": [721], \"Vertical_Distance_To_Hydrology\": [251], \"Horizontal_Distance_To_Roadways\": [2391], \"Hillshade_9am\": [214], \"Hillshade_Noon\": [170], \"Hillshade_3pm\": [75], \"Horizontal_Distance_To_Fire_Points\": [1822], \"Wilderness_Area\": [\"Rawah\"], \"Soil_Type\": [\"8776\"]}, {\"Elevation\": [2730], \"Aspect\": [71], \"Slope\": [14], \"Horizontal_Distance_To_Hydrology\": [30], \"Vertical_Distance_To_Hydrology\": [6], \"Horizontal_Distance_To_Roadways\": [1973], \"Hillshade_9am\": [235], \"Hillshade_Noon\": [211], \"Hillshade_3pm\": [104], \"Horizontal_Distance_To_Fire_Points\": [297], \"Wilderness_Area\": [\"Commanche\"], \"Soil_Type\": [\"7757\"]}, {\"Elevation\": [2858], \"Aspect\": [59], \"Slope\": [15], \"Horizontal_Distance_To_Hydrology\": [60], \"Vertical_Distance_To_Hydrology\": [0], \"Horizontal_Distance_To_Roadways\": [430], \"Hillshade_9am\": [230], \"Hillshade_Noon\": [207], \"Hillshade_3pm\": [106], \"Horizontal_Distance_To_Fire_Points\": [1638], \"Wilderness_Area\": [\"Rawah\"], \"Soil_Type\": [\"7745\"]}]}",
+    "raw_prediction": "{\n    \"predictions\": [[0.998903275, 0.000246025738, 5.95152614e-21, 9.71167191e-22, 1.43208384e-18, 3.02002737e-19, 0.000850719109], [0.450814098, 0.495292455, 0.000358057645, 1.85100707e-05, 0.0466784388, 0.00678193197, 5.65067967e-05], [0.573776722, 0.425062776, 1.02479625e-09, 1.08816282e-10, 0.00115906622, 2.13586802e-08, 1.33791457e-06]\n    ]\n}",
+    "groundtruth": null
+  }
+]

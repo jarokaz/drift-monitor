@@ -22,9 +22,9 @@ request-response log into tfdv.types.BeamExample.
 import json
 import apache_beam as beam
 import numpy as np
+import tensorflow as tf
 
 from typing import List, Optional, Text, Union, Dict, Iterable, Mapping
-from tensorflow_data_validation import types
 from tensorflow_data_validation import constants
 
 _RAW_DATA_COLUMN = 'raw_data'
@@ -39,26 +39,45 @@ _LOGGING_TABLE_SCHEMA = {
 }
 
 
+def _serialize_example(feature_dict: Dict) -> tf.train.Example:
+  example = tf.train.Example()
+
+  for name, values in feature_dict.items():
+    feature = example.features.feature[name]
+    if isinstance(values[0], str):
+      values = [value.encode() for value in values]
+      add = feature.bytes_list.value.extend
+    elif isinstance(values[0], float):
+      add = feature.float32_list.value.extend
+    elif isinstance(values[0], int):
+      add = feature.int64_list.value.extend
+    else:
+      raise AssertionError('Unsupported type: %s' % type(values[0]))
+    add(np.array(values))
+
+  return example.SerializeToString()
+
+
 def _validate_request_response_log_schema(log_record: Dict):
     """Validates that log record conforms to schema."""
     
     incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
     if bool(incorrect_features):
       raise TypeError("Received log record with incorrect features %s" %
-                       features_columns)
+                       incorrect_features)
        
     features_with_wrong_type = [key for key, value in log_record.items() 
                                 if not _LOGGING_TABLE_SCHEMA[key](value)]
-    if not bool(features_with_wrong_type):
+    if bool(features_with_wrong_type):
       raise TypeError("Received log record with incorrect feature types %s" %
                        features_with_wrong_type)
     
     
 @beam.typehints.with_input_types(Dict)
-@beam.typehints.with_output_types(types.BeamExample)
+@beam.typehints.with_output_types(bytes)
 class JSONObjectCoder(beam.DoFn):
   """A DoFn which converts an AI Platform Prediction input with instances in 
-  a JSON object format to types.BeamExample elements."""
+  a JSON object format to tf.Example elements."""
 
   def __init__(self):
     self._example_size = beam.metrics.Metrics.counter(
@@ -72,19 +91,17 @@ class JSONObjectCoder(beam.DoFn):
     raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
     if not type(raw_data[_INSTANCES_KEY][0]) is dict:
         raise TypeError("Expected instances in a JSON object format.")
-        
+
     for instance in raw_data[_INSTANCES_KEY]:
-        for key, value in instance.items():
-            instance[key] = np.array(value)
-        yield instance
+        yield _serialize_example(instance)
             
       
 
 @beam.typehints.with_input_types(Dict)
-@beam.typehints.with_output_types(types.BeamExample)
+@beam.typehints.with_output_types(bytes)
 class SimpleListCoder(beam.DoFn):
   """A DoFn which converts an AI Platform Prediction input with instances in 
-  a simple list format to types.BeamExample elements."""
+  a simple list format to tf.Example elements."""
 
   def __init__(self, feature_names=None):
     self._example_size = beam.metrics.Metrics.counter(
@@ -108,8 +125,9 @@ class SimpleListCoder(beam.DoFn):
         raise TypeError("The provided feature list does not match the length of an instance.")
                 
     for instance in raw_data[_INSTANCES_KEY]:
-        yield {name: np.array([value])
+        instance =  {name: [value])
             for name, value in zip(self._feature_names, instance)}
+        yield _serialize_example(instance)
             
 
     

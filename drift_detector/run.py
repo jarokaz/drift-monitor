@@ -29,7 +29,6 @@ from typing import List, Optional, Text, Union, Dict, Iterable
 
 import apache_beam as beam
 import pyarrow 
-import tensorflow_data_validation as tfdv
 
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.options.pipeline_options import SetupOptions
@@ -37,14 +36,12 @@ from apache_beam.options.pipeline_options import GoogleCloudOptions
 from apache_beam.runners import DataflowRunner
 from apache_beam.runners import DirectRunner
 
-from google.protobuf import text_format
-from tensorflow_data_validation.statistics import stats_options
-from tensorflow_data_validation.utils import io_util
-from tensorflow_metadata.proto.v0 import statistics_pb2
+from tensorflow_data_validation import StatsOptions
+from tensorflow_data_validation import load_statistics
+from tensorflow_data_validation import load_schema_text
 
 from utils.drift_reports import generate_drift_reports
 from utils.drift_reports import InstanceType
-
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
@@ -104,15 +101,16 @@ if __name__ == '__main__':
     else:
         raise TypeError("The instance_type parameter must be LIST or OBJECT")
     
-    if known_args.baseline_stats_file:
-        baseline_stats = tfdv.load_statistics(known_args.baseline_stats_file)
-    else:
-        baseline_stats = None
+    #if known_args.baseline_stats_file:
+       # baseline_stats = load_statistics(known_args.baseline_stats_file)
+    #else:
+    #    baseline_stats = None
+    baseline_stats = None
         
     start_time = known_args.start_time
     end_time = known_args.end_time
     
-    schema = tfdv.load_schema_text(known_args.schema_file)
+    schema = load_schema_text(known_args.schema_file)
     
     pipeline_options = PipelineOptions(pipeline_args)   
         
@@ -125,5 +123,4 @@ if __name__ == '__main__':
             output_path=known_args.output_path,
             schema=schema, 
             baseline_stats=baseline_stats,
-            stats_options=stats_options,
             pipeline_options=pipeline_options)

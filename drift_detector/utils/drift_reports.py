@@ -25,12 +25,13 @@ from enum import Enum
 from typing import List, Optional, Text, Union, Dict, Iterable
 
 import apache_beam as beam
-import tensorflow_data_validation as tfdv
 
 from apache_beam.options.pipeline_options import PipelineOptions
 from google.cloud import bigquery
 from jinja2 import Template
-from tensorflow_data_validation.statistics import stats_options
+
+from tensorflow_data_validation import GenerateStatistics
+from tensorflow_data_validation import validate_statistics
 from tensorflow_data_validation.utils import batch_util
 
 from tensorflow_metadata.proto.v0 import statistics_pb2
@@ -73,7 +74,6 @@ def generate_drift_reports(
         output_path: GCSPath,
         schema: schema_pb2.Schema,
         baseline_stats: statistics_pb2.DatasetFeatureStatisticsList,
-        stats_options: stats_options.StatsOptions = stats_options.StatsOptions(),
         pipeline_options: Optional[PipelineOptions] = None,       
 ):
     """Computes statistics and anomalies for a time window in AI Platform Prediction
@@ -92,7 +92,6 @@ def generate_drift_reports(
       output_path: The GCS location to output the statistics and anomalies
         proto buffers to. The file names will be `stats.pb` and `anomalies.pbtxt`. 
       schema: A Schema protobuf describing the expected schema.
-      stats_options: `tfdv.StatsOptions` for generating data statistics.
       pipeline_options: Optional beam pipeline options. This allows users to
         specify various beam pipeline execution parameters like pipeline runner
         (DirectRunner or DataflowRunner), cloud dataflow service project id, etc.
@@ -119,7 +118,7 @@ def generate_drift_reports(
             
         stats = (examples
                 | 'BeamExamplesToArrow' >> batch_util.BatchExamplesToArrowRecordBatches()
-                | 'GenerateStatistics' >> tfdv.GenerateStatistics(stats_options)
+                | 'GenerateStatistics' >> GenerateStatistics()
                 )
         
         _ = (stats       
@@ -130,7 +129,7 @@ def generate_drift_reports(
                       statistics_pb2.DatasetFeatureStatisticsList)))
         
         _ = (stats
-            | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema)
+            | 'ValidateStatistics' >> beam.Map(validate_statistics, schema=schema)
             | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
                                             file_path_prefix=anomalies_output_path,
                                             shard_name_template='',

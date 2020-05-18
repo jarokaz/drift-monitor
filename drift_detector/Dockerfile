@@ -22,6 +22,6 @@ COPY *.py ./
 COPY coders/*.py coders/
 COPY utils/*.py utils/
 
-RUN pip install -U  tensorflow_data_validation==0.21.5 jinja2
+RUN pip install -U  tensorflow_data_validation[visualization]==0.22.0 jinja2
 
 ENV FLEX_TEMPLATE_PYTHON_PY_FILE="${WORKDIR}/run.py"
