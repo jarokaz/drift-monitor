@@ -142,12 +142,6 @@ def schedule_drift_detector_runs(
             end_time.isoformat(sep='T', timespec='minutes'),
         )
 
-
-        #output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/{}'.format(time.strftime("%Y%m%d-%H%M%S"))
-        #schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
-
-        print(output_path)
-        return
         response = create_drift_detector_task(
             project_id=project_id,
             region=region,
@@ -164,88 +158,5 @@ def schedule_drift_detector_runs(
             schema_file=schema_file
         )
         
-        print(response)
-
         logging.log(logging.INFO, response)
 
-
-if __name__ == '__main__':
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.INFO)
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        '--project',
-        help='Project of the queue to add the task to.',
-        required=True,
-    )
-
-    parser.add_argument(
-        '--queue',
-        help='ID (short name) of the queue to add the task to.',
-        required=True,
-    )
-
-    parser.add_argument(
-        '--service_account',
-        help='An email of a service account to use for submitting calls.',
-        required=True,
-    )
-
-    parser.add_argument(
-        '--location',
-        help='Location of the queue to add the task to.',
-        required=True,
-    )
-
-    parser.add_argument(
-        '--model_name',
-        help='The AI Platform Prediction model',
-        required=True,
-    )
-
-    parser.add_argument(
-        '--model_version',
-        help='The AI Platform Prediction model version',
-        required=True
-    )
-
-    parser.add_argument(
-        '--data_file',
-        help="A path to a file with instances.",
-        required=True
-    )
-
-    parser.add_argument(
-        '--start_time',
-        help='The start date and time for a simulation in ISO format',
-        required=True
-    )
-
-    parser.add_argument(
-        '--instances_per_call',
-        help='The number of instances batched in each call',
-        type=int,
-        default=3,
-    )
-
-    parser.add_argument(
-        '--time_between_calls',
-        help='The delay between calls in seconds',
-        type=int,
-        default=60,
-    )
-    args = parser.parse_args()
-
-    generate_predict_tasks(
-        project=args.project,
-        queue=args.queue,
-        service_account=args.service_account,
-        location=args.location,
-        model_name=args.model_name,
-        model_version=args.model_version,
-        data_file=args.data_file,
-        start_time=args.start_time,
-        instances_per_call=args.instances_per_call,
-        time_between_calls=args.time_between_calls)
