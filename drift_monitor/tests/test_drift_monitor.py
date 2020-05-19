@@ -76,9 +76,9 @@ def test_schedule_drift_detector_runs( ):
     feature_names = []
 
     #beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=180)
-    beginning_time = datetime.datetime.now() 
-    time_window = 2 
-    num_of_runs = 1
+    beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=600) 
+    time_window = 60 
+    num_of_runs = 24 
     output_root_folder = 'gs://mlops-dev-workspace/drift_monitor/output/tf'
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
 

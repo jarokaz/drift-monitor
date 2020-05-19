@@ -136,7 +136,7 @@ def schedule_drift_detector_runs(
         start_time = end_time - datetime.timedelta(minutes=time_window)
         schedule_time = end_time + datetime.timedelta(minutes=2)
         
-        output_path = '{}/{}-{}'.format(
+        output_path = '{}/{}_{}'.format(
             output_root_folder,
             start_time.isoformat(sep='T', timespec='minutes'),
             end_time.isoformat(sep='T', timespec='minutes'),
