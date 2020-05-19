@@ -42,6 +42,7 @@ def create_drift_detector_task(
     start_time: datetime.datetime,
     end_time: datetime.datetime,
     instance_type: Text,
+    feature_names: List[Text],
     output_path: Text,
     schema_file: Text,
     setup_file: Optional[Text] = _SCHEMA_FILE_PATH
@@ -55,7 +56,13 @@ def create_drift_detector_task(
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
 
-    if instance_type != 'OBJECT' and instance_type != 'LIST':
+    if instance_type == 'OBJECT':
+        feature_names = None 
+    elif instance_type == 'LIST':
+        if not feature_names:
+            raise TypeError("Feature names must be provided for the LIST instance types")
+        feature_names = ','.join(feature_names)
+    else:
         raise TypeError("The instance_type parameter must be LIST or OBJECT")
 
     parameters = {
@@ -67,6 +74,9 @@ def create_drift_detector_task(
         'schema_file': schema_file,
         'setup_file': setup_file
     }
+
+    if feature_names:
+        parameters['feature_names'] = feature_names
 
     body = {
         'launch_parameter':
@@ -86,7 +96,6 @@ def create_drift_detector_task(
         }
     }
 
-
     timestamp = timestamp_pb2.Timestamp()
     timestamp.FromDatetime(schedule_time)
     task['schedule_time'] = timestamp
@@ -100,31 +109,64 @@ def create_drift_detector_task(
     return response
 
 
-def schedule_drift_monitor_runs(
-        project: str,
-        queue: str,
+def schedule_drift_detector_runs(
+        project_id: str,
+        task_queue: str,
         service_account: str,
-        location: str,
-        model_name: str,
-        model_version: str,
-        data_file: str,
-        start_time: datetime,
-        instances_per_call: int,
-        time_between_calls: int):
-    """Creates a set of tasks that call AI Platform Prediction service."""
+        region: str,
+        template_path: Text,
+        beginning_time: datetime.datetime,
+        time_window: int,
+        num_of_runs: int,
+        request_response_log_table: Text,
+        instance_type: Text,
+        feature_names: List[Text],
+        output_root_folder: Text,
+        schema_file: Text, 
+):
+    beginning_time = datetime.datetime(
+        beginning_time.year, 
+        beginning_time.month, 
+        beginning_time.day, 
+        beginning_time.hour, 
+        beginning_time.minute)
 
-    with open(data_file, 'r') as json_examples:
-        instances = []
-        execute_time = datetime.datetime.fromisoformat(start_time)
-        for json_example in json_examples:
-            instances.append(json.loads(json_example))
-            if len(instances) == instances_per_call:
-                _create_predict_task(instances, execute_time)
-                execute_time = execute_time + \
-                    datetime.timedelta(seconds=time_between_calls)
-                instances = []
-        if len(instances):
-            _create_predict_task(instances, execute_time)
+    for run_num in range(num_of_runs):
+        end_time = beginning_time + datetime.timedelta(minutes=(run_num + 1)*time_window)
+        start_time = end_time - datetime.timedelta(minutes=time_window)
+        schedule_time = end_time + datetime.timedelta(minutes=2)
+        
+        output_path = '{}/{}-{}'.format(
+            output_root_folder,
+            start_time.isoformat(sep='T', timespec='minutes'),
+            end_time.isoformat(sep='T', timespec='minutes'),
+        )
+
+
+        #output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/{}'.format(time.strftime("%Y%m%d-%H%M%S"))
+        #schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
+
+        print(output_path)
+        return
+        response = create_drift_detector_task(
+            project_id=project_id,
+            region=region,
+            task_queue=task_queue,
+            service_account=service_account,
+            template_path=template_path,
+            schedule_time=schedule_time,
+            request_response_log_table=request_response_log_table,
+            start_time=start_time,
+            end_time=end_time,
+            instance_type=instance_type,
+            feature_names=feature_names,
+            output_path=output_path,
+            schema_file=schema_file
+        )
+        
+        print(response)
+
+        logging.log(logging.INFO, response)
 
 
 if __name__ == '__main__':
