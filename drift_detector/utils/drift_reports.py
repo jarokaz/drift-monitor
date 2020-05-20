@@ -44,8 +44,6 @@ from coders.beam_example_coders import SimpleListCoder
 _STATS_FILENAME='stats.pb'
 _ANOMALIES_FILENAME='anomalies.pbtxt'
 
-GCSPath = Union[bytes, Text]
-
 def _generate_query(table_name, start_time, end_time):
   """Prepares a data sampling query."""
 
@@ -70,9 +68,9 @@ def generate_drift_reports(
         request_response_log_table: str,
         instance_type: InstanceType,    
         feature_names: List[str],
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        output_path: GCSPath,
+        start_time: str,
+        end_time: str,
+        output_path: str,
         schema: schema_pb2.Schema,
         baseline_stats: statistics_pb2.DatasetFeatureStatisticsList,
         pipeline_options: Optional[PipelineOptions] = None,       
@@ -88,8 +86,8 @@ def generate_drift_reports(
         and a JSON object (InstanceType(JSON_OBJECT))
       feature_names: A list of feature names. Must be provided if the instance_type is
         InstanceType(SIMPLE_LIST)
-      start_time: The beginning of a time window.
-      end_time: The end of a time window.
+      start_time: The beginning of a time window in the ISO time format.
+      end_time: The end of a time window in the ISO time format.
       output_path: The GCS location to output the statistics and anomalies
         proto buffers to. The file names will be `stats.pb` and `anomalies.pbtxt`. 
       schema: A Schema protobuf describing the expected schema.
