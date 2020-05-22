@@ -1,7 +1,0 @@
-
-framework: 'TENSORFLOW'
-pythonVersion: '3.7'
-runtimeVersion: '2.1'
-manualScaling:
-  nodes: 1
-machineType: 'n1-standard-16'
