@@ -25,6 +25,45 @@ from typing import List, Optional, Text, Union, Dict
 from google.cloud import tasks_v2
 from google.protobuf import timestamp_pb2
 
+def create_predict_task(
+    project: str,
+    queue: str,
+    service_account: str,
+    location: str,
+    model_name: str,
+    model_version: str, 
+    instances: List[Union[Dict,List]],
+    execute_time: datetime):
+                        
+    """Creates a task that calls AI Platform Prediction service."""
+    
+    client = tasks_v2.CloudTasksClient()
+    parent = client.queue_path(project, location, queue)
+
+    service_uri = 'https://ml.googleapis.com/v1/projects/{}/models/{}/versions/{}:predict'.format(
+    project, model_name, model_version)
+    instances = json.dumps({'instances': instances})
+    print(instances)
+
+    task = {
+            'http_request': {  
+                'http_method': 'POST',
+                'url': service_uri,
+                'body': instances.encode(),
+                'headers': {'content-type': 'application/json'},
+                'oauth_token': {'service_account_email': service_account}
+            }
+    }
+
+    timestamp = timestamp_pb2.Timestamp()
+    timestamp.FromDatetime(execute_time)
+    task['schedule_time'] = timestamp
+
+    response = client.create_task(parent, task)
+    logging.info("Created task: {}".format(response.name))
+
+    return response
+
 
 def generate_predict_tasks(
     project: str,
@@ -39,50 +78,24 @@ def generate_predict_tasks(
     time_between_calls: int):
 
     """Creates a set of tasks that call AI Platform Prediction service."""
-
-    def _create_predict_task( 
-                instances: List[Union[Dict,List]],
-                execute_time: datetime):
-                        
-        """Creates a task that calls AI Platform Prediction service."""
-        
-        client = tasks_v2.CloudTasksClient()
-        parent = client.queue_path(project, location, queue)
-
-        service_uri = 'https://ml.googleapis.com/v1/projects/{}/models/{}/versions/{}:predict'.format(
-        project, model_name, model_version)
-        instances = {'instances': instances}
-
-        task = {
-                'http_request': {  
-                    'http_method': 'POST',
-                    'url': service_uri,
-                    'body': json.dumps(instances).encode(),
-                    'headers': {'content-type': 'application/json'},
-                    'oauth_token': {'service_account_email': service_account}
-                }
-        }
-
-        timestamp = timestamp_pb2.Timestamp()
-        timestamp.FromDatetime(execute_time)
-        task['schedule_time'] = timestamp
-
-        response = client.create_task(parent, task)
-        logging.info("Created task: {}".format(response.name))
-
-        return response
     
-    with open(data_file, 'r') as json_examples:
-        instances = []
-        execute_time = datetime.datetime.fromisoformat(start_time)
-        for json_example in json_examples:
-            instances.append(json.loads(json_example))
-            if len(instances) == instances_per_call:
-                _create_predict_task(instances, execute_time)
-                execute_time = execute_time + datetime.timedelta(seconds=time_between_calls)
-                instances = []
-        if len(instances):
-            _create_predict_task(instances, execute_time)
+    #with open(data_file, 'r') as json_examples:
+    #    instances = []
+    #    execute_time = datetime.datetime.fromisoformat(start_time)
+    #    for json_example in json_examples:
+    #        instances.append(json.loads(json_example))
+    #        if len(instances) == instances_per_call:
+    #            create_predict_task(
+    #                   project: str,
+    #                   queue: str,
+    #                   service_account: str,
+    #                   location: str,
+    #                   model_name: str,
+    #                   model_version: str, instances, 
+    #             execute_time + datetime.timedelta(seconds=time_between_calls)
+    #            instances = []
+    #    if len(instances):
+    #        _create_predict_task(instances, execute_time)
 
 if __name__ == '__main__':
     logging.basicConfig()
