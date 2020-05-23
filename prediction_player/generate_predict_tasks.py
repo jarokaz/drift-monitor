@@ -43,7 +43,6 @@ def create_predict_task(
     service_uri = 'https://ml.googleapis.com/v1/projects/{}/models/{}/versions/{}:predict'.format(
     project, model_name, model_version)
     instances = json.dumps({'instances': instances})
-    print(instances)
 
     task = {
             'http_request': {  

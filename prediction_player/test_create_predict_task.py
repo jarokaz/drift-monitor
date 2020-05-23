@@ -16,8 +16,8 @@ def test_create_predict_task(capsys):
             { 
                 'Soil_Type': ['7202'],
                 'Wilderness_Area': ['Commanche'],
-                'Aspect': [61],
-                'Elevation': [3091],
+                'Aspect': [61.0],
+                'Elevation': [3091.1],
                 'Hillshade_3pm': [129],
                 'Hillshade_9am': [227],
                 'Hillshade_Noon': [223],
