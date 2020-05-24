@@ -20,31 +20,41 @@ import datetime
 import json
 import mock
 import pytest
+import numpy as np
 
 import tensorflow as tf
+from tensorflow_metadata.proto.v0 import schema_pb2
+from google.protobuf.json_format import MessageToDict, MessageToJson, ParseDict
 
-from coders.log_to_example_coders import JSONObjectCoder, SimpleListCoder
+from coders.beam_example_coders import InstanceCoder, _validate_request_response_log_schema
 
+schema_dict = {
+    'feature': [
+        {'name': 'Soil_Type', 'type': 'BYTES', 'domain': 'Soil_Type'},
+        {'name': 'Wilderness_Area', 'type': 'BYTES', 'domain': 'Wilderness_Area'},
+        {'name': 'Aspect', 'type': 'INT'},
+        {'name': 'Cover_Type', 'type': 'INT'},
+        {'name': 'Elevation', 'type': 'INT'},
+        {'name': 'Hillshade_3pm', 'type': 'INT'},
+        {'name': 'Hillshade_9am', 'type': 'INT'},
+        {'name': 'Hillshade_Noon', 'type': 'INT'},
+        {'name': 'Horizontal_Distance_To_Fire_Points', 'type': 'INT'},
+        {'name': 'Horizontal_Distance_To_Hydrology', 'type': 'INT'},
+        {'name': 'Horizontal_Distance_To_Roadways', 'type': 'INT'},
+        {'name': 'Slope', 'type': 'INT'},
+        {'name': 'Vertical_Distance_To_Hydrology', 'type': 'INT'}],
+    'stringDomain': [
+        {'name': 'Soil_Type',
+        'value': ['C2702', 'C2703', 'C2704', 'C2705', 'C2706', 'C2717',
+                  'C3501', 'C3502', 'C4201', 'C4703', 'C4704', 'C4744',
+                  'C4758', 'C5101', 'C5151', 'C6101', 'C6102', 'C6731',
+                  'C7101', 'C7102', 'C7103', 'C7201', 'C7202', 'C7700',
+                  'C7701', 'C7702', 'C7709', 'C7710', 'C7745', 'C7746',
+                  'C7755', 'C7756', 'C7757', 'C7790', 'C8703', 'C8707',
+                  'C8708', 'C8771', 'C8772', 'C8776']},
+      {'name': 'Wilderness_Area',
+        'value': ['Cache', 'Commanche', 'Neota', 'Rawah']}]}
 
-_covertype_feature_description = {
-    'Wilderness_Area': tf.io.VarLenFeature(tf.string),
-    'Vertical_Distance_To_Hydrology': tf.io.VarLenFeature(tf.int64),
-    'Soil_Type': tf.io.VarLenFeature(tf.string),
-    'Hillshade_3pm': tf.io.VarLenFeature(tf.int64),
-    'Hillshade_Noon': tf.io.VarLenFeature(tf.int64),
-    'Horizontal_Distance_To_Fire_Points': tf.io.VarLenFeature(tf.int64),
-    'Aspect': tf.io.VarLenFeature(tf.int64),
-    'Hillshade_9am': tf.io.VarLenFeature(tf.int64),
-    'Horizontal_Distance_To_Hydrology': tf.io.VarLenFeature(tf.int64),
-    'Slope': tf.io.VarLenFeature(tf.int64),
-    'Elevation': tf.io.VarLenFeature(tf.int64),
-    'Horizontal_Distance_To_Roadways': tf.io.VarLenFeature(tf.int64),
-}
-
-_feature_names = ['Elevation', 'Aspect', 'Slope', 'Horizontal_Distance_To_Hydrology',
-       'Vertical_Distance_To_Hydrology', 'Horizontal_Distance_To_Roadways',
-       'Hillshade_9am', 'Hillshade_Noon', 'Hillshade_3pm',
-       'Horizontal_Distance_To_Fire_Points', 'Wilderness_Area', 'Soil_Type']
 
 _log_record_object_format = {
     "model": "covertype_classifier_tf",
@@ -64,23 +74,42 @@ _log_record_list_format = {
     "groundtruth": "NaN"
   }
 
-def _convert_to_dense(x):
-    default_value = '' if x.dtype == tf.string else 0
-    return tf.sparse.to_dense(
-          x, 
-          default_value)
 
-def test_object_coder():
-    coder = JSONObjectCoder()
+@pytest.fixture
+def coder():
+    schema = schema_pb2.Schema()
+    ParseDict(schema_dict, schema)
+    return InstanceCoder(schema=schema)
+
+def test_instancecoder_constructor():
+    expected_result = {
+      'Soil_Type': np.str, 
+      'Wilderness_Area': np.str,
+      'Aspect': np.int64, 
+      'Cover_Type': np.int64, 
+      'Elevation': np.int64, 
+      'Hillshade_3pm': np.int64, 
+      'Hillshade_9am': np.int64,
+      'Hillshade_Noon': np.int64, 
+      'Horizontal_Distance_To_Fire_Points': np.int64, 
+      'Horizontal_Distance_To_Hydrology': np.int64, 
+      'Horizontal_Distance_To_Roadways': np.int64, 
+      'Slope': np.int64, 
+      'Vertical_Distance_To_Hydrology':np.int64}
+
+    schema = schema_pb2.Schema()
+    ParseDict(schema_dict, schema)
+    coder = InstanceCoder(schema=schema)
+    assert coder._features == expected_result
+
+
+def test_instancecoder(coder):
     examples = coder.process(_log_record_object_format)
-    example = tf.io.parse_single_example(next(examples),
-                                            _covertype_feature_description)
-    example = {key: _convert_to_dense(value) for key, value in example.items()}
-    print(example)
-    example = tf.io.parse_single_example(next(examples),
-                                            _covertype_feature_description)
-    example = {key: _convert_to_dense(value) for key, value in example.items()}
-    print(example)
+    example = next(examples)
+
+
+def test_validate_request_response_log_schema():
+    result = _validate_request_response_log_schema(_log_record_object_format)
 
 
 def test_list_coder():

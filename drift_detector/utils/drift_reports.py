@@ -37,8 +37,7 @@ from tensorflow_data_validation import utils
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
 
-from coders.beam_example_coders import JSONObjectCoder
-from coders.beam_example_coders import SimpleListCoder
+from coders.beam_example_coders import InstanceCoder
 
 
 _STATS_FILENAME='stats.pb'
@@ -60,14 +59,8 @@ def _generate_query(table_name, start_time, end_time):
   return query
 
 
-class InstanceType(Enum):
-    SIMPLE_LIST = 1
-    JSON_OBJECT = 2
-
 def generate_drift_reports(
         request_response_log_table: str,
-        instance_type: InstanceType,    
-        feature_names: List[str],
         start_time: str,
         end_time: str,
         output_path: str,
@@ -81,11 +74,6 @@ def generate_drift_reports(
     Args:
       request_response_log_table: A full name of a BigQuery table
         with the request_response_log
-      instance_type: The type of instances logged in the request_response_log_table.
-        Currently, the only supported instance types are: a simple list (InstanceType.SIMPLE_LIST)
-        and a JSON object (InstanceType(JSON_OBJECT))
-      feature_names: A list of feature names. Must be provided if the instance_type is
-        InstanceType(SIMPLE_LIST)
       start_time: The beginning of a time window in the ISO time format.
       end_time: The end of a time window in the ISO time format.
       output_path: The GCS location to output the statistics and anomalies
@@ -106,15 +94,8 @@ def generate_drift_reports(
         raw_examples = ( p
                    | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
         
-        if instance_type == InstanceType.SIMPLE_LIST:
-            examples = (raw_examples
-                       | 'SimpleInstancesToBeamExamples' >> beam.ParDo(SimpleListCoder(feature_names)))
-        elif instance_type == InstanceType.JSON_OBJECT:
-            examples = (raw_examples
-                       | 'JSONObjectInstancesToBeamExamples' >> beam.ParDo(JSONObjectCoder()))  
-        else:
-            raise TypeError("Unsupported instance type")
-
+        examples = (raw_examples
+                    | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema)))
 
         stats = (examples
                 | 'BeamExamplesToArrow' >> utils.batch_util.BatchExamplesToArrowRecordBatches() 

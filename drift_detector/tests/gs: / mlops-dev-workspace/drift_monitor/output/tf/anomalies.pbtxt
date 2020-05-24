@@ -219,36 +219,4 @@ baseline {
     value: "Rawah"
   }
 }
-anomaly_info {
-  key: "Cover_Type"
-  value {
-    description: "Column is completely missing"
-    severity: ERROR
-    short_description: "Column dropped"
-    reason {
-      type: SCHEMA_MISSING_COLUMN
-      short_description: "Column dropped"
-      description: "Column is completely missing"
-    }
-    path {
-      step: "Cover_Type"
-    }
-  }
-}
-anomaly_info {
-  key: "Soil_Type"
-  value {
-    description: "Examples contain values missing from the schema: 2702 (<1%), 2703 (~1%), 2704 (<1%), 2705 (~2%), 2706 (<1%), 2717 (~1%), 4201 (<1%), 4703 (~6%), 4704 (~2%), 4744 (~4%), 4758 (~2%), 5101 (<1%), 6101 (<1%), 6102 (<1%), 6731 (<1%), 7101 (<1%), 7102 (<1%), 7103 (<1%), 7201 (~5%), 7202 (~9%), 7700 (~2%), 7701 (<1%), 7702 (<1%), 7710 (<1%), 7745 (~22%), 7746 (~4%), 7755 (~4%), 7756 (~9%), 7757 (~7%), 7790 (<1%), 8703 (<1%), 8707 (<1%), 8771 (~3%), 8772 (~1%), 8776 (~1%). "
-    severity: ERROR
-    short_description: "Unexpected string values"
-    reason {
-      type: ENUM_TYPE_UNEXPECTED_STRING_VALUES
-      short_description: "Unexpected string values"
-      description: "Examples contain values missing from the schema: 2702 (<1%), 2703 (~1%), 2704 (<1%), 2705 (~2%), 2706 (<1%), 2717 (~1%), 4201 (<1%), 4703 (~6%), 4704 (~2%), 4744 (~4%), 4758 (~2%), 5101 (<1%), 6101 (<1%), 6102 (<1%), 6731 (<1%), 7101 (<1%), 7102 (<1%), 7103 (<1%), 7201 (~5%), 7202 (~9%), 7700 (~2%), 7701 (<1%), 7702 (<1%), 7710 (<1%), 7745 (~22%), 7746 (~4%), 7755 (~4%), 7756 (~9%), 7757 (~7%), 7790 (<1%), 8703 (<1%), 8707 (<1%), 8771 (~3%), 8772 (~1%), 8776 (~1%). "
-    }
-    path {
-      step: "Soil_Type"
-    }
-  }
-}
-anomaly_name_format: SERIALIZED_PATH
+data_missing: true
