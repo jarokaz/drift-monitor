@@ -40,7 +40,7 @@ _LOGGING_TABLE_SCHEMA = {
 
 
 def _validate_request_response_log_schema(log_record: Dict):
-    """Validates that log record conforms to schema."""
+    """Validates that a log record conforms to schema."""
     
     incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
     if bool(incorrect_features):
