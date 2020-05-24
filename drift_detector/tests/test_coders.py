@@ -30,19 +30,18 @@ from coders.beam_example_coders import InstanceCoder, _validate_request_response
 
 schema_dict = {
     'feature': [
-        {'name': 'Soil_Type', 'type': 'BYTES', 'domain': 'Soil_Type'},
-        {'name': 'Wilderness_Area', 'type': 'BYTES', 'domain': 'Wilderness_Area'},
-        {'name': 'Aspect', 'type': 'INT'},
-        {'name': 'Cover_Type', 'type': 'INT'},
         {'name': 'Elevation', 'type': 'INT'},
-        {'name': 'Hillshade_3pm', 'type': 'INT'},
+        {'name': 'Aspect', 'type': 'INT'},
+        {'name': 'Slope', 'type': 'INT'},
+        {'name': 'Horizontal_Distance_To_Hydrology', 'type': 'INT'},
+        {'name': 'Vertical_Distance_To_Hydrology', 'type': 'INT'},
+        {'name': 'Horizontal_Distance_To_Roadways', 'type': 'INT'},
         {'name': 'Hillshade_9am', 'type': 'INT'},
         {'name': 'Hillshade_Noon', 'type': 'INT'},
+        {'name': 'Hillshade_3pm', 'type': 'INT'},
         {'name': 'Horizontal_Distance_To_Fire_Points', 'type': 'INT'},
-        {'name': 'Horizontal_Distance_To_Hydrology', 'type': 'INT'},
-        {'name': 'Horizontal_Distance_To_Roadways', 'type': 'INT'},
-        {'name': 'Slope', 'type': 'INT'},
-        {'name': 'Vertical_Distance_To_Hydrology', 'type': 'INT'}],
+        {'name': 'Wilderness_Area', 'type': 'BYTES', 'domain': 'Wilderness_Area'},
+        {'name': 'Soil_Type', 'type': 'BYTES', 'domain': 'Soil_Type'}],
     'stringDomain': [
         {'name': 'Soil_Type',
         'value': ['C2702', 'C2703', 'C2704', 'C2705', 'C2706', 'C2717',
@@ -62,7 +61,7 @@ _log_record_object_format = {
     "time": "2020-05-17 10:30:00 UTC",
     "raw_data": '{"instances": [{"Elevation": [3716, 3717], "Aspect": [336, 337], "Slope": [9, 8], "Horizontal_Distance_To_Hydrology": [1026, 1027], "Vertical_Distance_To_Hydrology": [270, 271], "Horizontal_Distance_To_Roadways": [5309, 5319], "Hillshade_9am": [203, 204], "Hillshade_Noon": [230, 231], "Hillshade_3pm": [166, 167], "Horizontal_Distance_To_Fire_Points": [3455, 3444], "Wilderness_Area": ["Commanche", "Aaaa"], "Soil_Type": ["8776", "9999"]}, {"Elevation": [3225], "Aspect": [326], "Slope": [9], "Horizontal_Distance_To_Hydrology": [342], "Vertical_Distance_To_Hydrology": [0], "Horizontal_Distance_To_Roadways": [5500], "Hillshade_9am": [198], "Hillshade_Noon": [230], "Hillshade_3pm": [172], "Horizontal_Distance_To_Fire_Points": [1725], "Wilderness_Area": ["Rawah"], "Soil_Type": ["7201"]}]}',
     "raw_prediction": '{"predictions": [[4.21827644e-06, 1.45283067e-07, 6.71478847e-21, 4.34945702e-21, 5.18628625e-31, 1.35843754e-22, 0.999995589], [0.948056221, 0.0518435165, 2.80540131e-12, 4.14544565e-14, 8.18011e-10, 1.02051131e-10, 0.000100270954]]}',
-    "groundtruth": "NaN"
+    "groundtruth": None
   }
 
 _log_record_list_format = {
@@ -71,7 +70,7 @@ _log_record_list_format = {
     "time": "2020-05-17 10:30:00 UTC",
     "raw_data": '{"instances": [[3012, 84, 7, 309, 50, 361, 230, 228, 131, 1205, "Rawah", "7202"], [3058, 181, 16, 42, 10, 1803, 224, 248, 152, 421, "Commanche", "4758"]]}',
     "raw_prediction": '{"predictions": [0, 1, 1]}',
-    "groundtruth": "NaN"
+    "groundtruth": None
   }
 
 
@@ -83,19 +82,18 @@ def coder():
 
 def test_instancecoder_constructor():
     expected_result = {
-      'Soil_Type': np.str, 
-      'Wilderness_Area': np.str,
-      'Aspect': np.int64, 
-      'Cover_Type': np.int64, 
       'Elevation': np.int64, 
-      'Hillshade_3pm': np.int64, 
+      'Aspect': np.int64, 
+      'Slope': np.int64, 
+      'Horizontal_Distance_To_Hydrology': np.int64, 
+      'Vertical_Distance_To_Hydrology':np.int64,
+      'Horizontal_Distance_To_Roadways': np.int64, 
       'Hillshade_9am': np.int64,
       'Hillshade_Noon': np.int64, 
+      'Hillshade_3pm': np.int64, 
       'Horizontal_Distance_To_Fire_Points': np.int64, 
-      'Horizontal_Distance_To_Hydrology': np.int64, 
-      'Horizontal_Distance_To_Roadways': np.int64, 
-      'Slope': np.int64, 
-      'Vertical_Distance_To_Hydrology':np.int64}
+      'Wilderness_Area': np.str,
+      'Soil_Type': np.str}
 
     schema = schema_pb2.Schema()
     ParseDict(schema_dict, schema)
@@ -103,13 +101,27 @@ def test_instancecoder_constructor():
     assert coder._features == expected_result
 
 
-def test_instancecoder(coder):
+def test_instancecoder_object(coder):
     examples = coder.process(_log_record_object_format)
     example = next(examples)
+    print('/n')
+    print(example)
+    example = next(examples)
+    print('/n')
+
+def test_instancecoder_list(coder):
+    examples = coder.process(_log_record_list_format)
+    example = next(examples)
+    print('/n')
+    print(example)
+    example = next(examples)
+    print('/n')
+    print(example)
 
 
 def test_validate_request_response_log_schema():
     result = _validate_request_response_log_schema(_log_record_object_format)
+    print(result)
 
 
 def test_list_coder():

@@ -36,7 +36,7 @@ _LOGGING_TABLE_SCHEMA = {
   'time': lambda x: lambda x: type(x) is str,
   'raw_data': lambda x: type(x) is str, 
   'raw_prediction': lambda x: type(x) is str,
-  'groundtruth': lambda x: type(x) is str
+  'groundtruth': lambda x: type(x) is str or x is None
 }
 
 _SCHEMA_TO_NUMPY = {
@@ -78,25 +78,27 @@ class InstanceCoder(beam.DoFn):
       if not feature.type in _SCHEMA_TO_NUMPY.keys():
         raise ValueError("Unsupported feature type: {}".format(feature.type))
       self._features[feature.name] = _SCHEMA_TO_NUMPY[feature.type]
-
     
+
   def process(self, log_record: Dict):
 
     _validate_request_response_log_schema(log_record)
 
-    print('In process')
-
-    return
- 
     raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
-    if (not type(raw_data[_INSTANCES_KEY][0]) is dict or
-        not type(raw_data[_INSTANCES_KEY][0]) is list):
-        raise TypeError("Unsupported input instance format. Only JSON list or JSON object instances are supported") 
-        
-    for instance in raw_data[_INSTANCES_KEY]:
-        for key, value in instance.items():
-            instance[key] = np.array(value)
+
+    if type(raw_data[_INSTANCES_KEY][0]) is dict:
+      for instance in raw_data[_INSTANCES_KEY]:
+        for name, value in instance.items():
+          instance[name] = np.array(value, dtype=self._features[name])
         yield instance
+    elif type(raw_data[_INSTANCES_KEY][0]) is list:
+      for instance in raw_data[_INSTANCES_KEY]:
+        yield {name: np.array([value], dtype=self._features[name])
+          for name, value in zip(list(self._features.keys()), instance)}
+    else:
+      raise TypeError("Unsupported input instance format. Only JSON list or JSON object instances are supported")
+        
+  
             
       
 
