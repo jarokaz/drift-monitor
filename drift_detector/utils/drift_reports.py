@@ -40,17 +40,18 @@ from tensorflow_metadata.proto.v0 import schema_pb2
 from coders.beam_example_coders import InstanceCoder
 
 
-_STATS_FILENAME='stats.pb'
-_ANOMALIES_FILENAME='anomalies.pbtxt'
+_STATS_FILENAME = 'stats.pb'
+_ANOMALIES_FILENAME = 'anomalies.pbtxt'
 
 _LOGGING_TABLE_SCHEMA = {
-  'model': 'STRING',
-  'model_version':  'STRING',
-  'time': 'TIMESTAMP',
-  'raw_data': 'STRING',
-  'raw_prediction': 'STRING',
-  'groundtruth': 'STRING'
+    'model': 'STRING',
+    'model_version':  'STRING',
+    'time': 'TIMESTAMP',
+    'raw_data': 'STRING',
+    'raw_prediction': 'STRING',
+    'groundtruth': 'STRING'
 }
+
 
 def _validate_request_response_log_schema(request_response_log: str):
     """Validates that a provided request response log table
@@ -64,46 +65,32 @@ def _validate_request_response_log_schema(request_response_log: str):
        """
 
     query = Template(query_template).render(
-      source_table=request_response_log) 
+        source_table=request_response_log)
 
     client = bigquery.Client()
     query_job = client.query(query)
     rows = query_job.result()
-    schema = {field.name: field.field_type for field in rows.schema} 
+    schema = {field.name: field.field_type for field in rows.schema}
 
     if schema != _LOGGING_TABLE_SCHEMA:
-      raise TypeError("The table - {} - does not conform to the reuquest_response log table schema". format(
-          request_response_log))
-    return
-
-
-    incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
-    if bool(incorrect_features):
-      raise TypeError("Received log record with incorrect features %s" %
-                       incorrect_features)
-       
-    features_with_wrong_type = [key for key, value in log_record.items() 
-                                if not _LOGGING_TABLE_SCHEMA[key](value)]
-
-    if bool(features_with_wrong_type):
-      raise TypeError("Received log record with incorrect feature types %s" %
-                       features_with_wrong_type)
+        raise TypeError("The table - {} - does not conform to the reuquest_response log table schema". format(
+            request_response_log))
 
 
 def _generate_query(table_name, start_time, end_time):
-  """Prepares a data sampling query."""
+    """Prepares a data sampling query."""
 
-  sampling_query_template = """
+    sampling_query_template = """
        SELECT *
        FROM 
            `{{ source_table }}` AS cover
        WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
        """
-  
-  query = Template(sampling_query_template).render(
-      source_table=table_name, start_time=start_time, end_time=end_time)
 
-  return query
+    query = Template(sampling_query_template).render(
+        source_table=table_name, start_time=start_time, end_time=end_time)
+
+    return query
 
 
 def generate_drift_reports(
@@ -113,11 +100,11 @@ def generate_drift_reports(
         output_path: str,
         schema: schema_pb2.Schema,
         baseline_stats: statistics_pb2.DatasetFeatureStatisticsList,
-        pipeline_options: Optional[PipelineOptions] = None,       
+        pipeline_options: Optional[PipelineOptions] = None,
 ):
     """Computes statistics and anomalies for a time window in AI Platform Prediction
     request-response log.
-  
+
     Args:
       request_response_log_table: A full name of a BigQuery table
         with the request_response_log
@@ -126,6 +113,7 @@ def generate_drift_reports(
       output_path: The GCS location to output the statistics and anomalies
         proto buffers to. The file names will be `stats.pb` and `anomalies.pbtxt`. 
       schema: A Schema protobuf describing the expected schema.
+      baseline_stats: Baseline statistics to compare against.
       pipeline_options: Optional beam pipeline options. This allows users to
         specify various beam pipeline execution parameters like pipeline runner
         (DirectRunner or DataflowRunner), cloud dataflow service project id, etc.
@@ -133,36 +121,41 @@ def generate_drift_reports(
         more details.
     """
 
-    query = _generate_query(request_response_log_table, start_time, end_time)    
+    sampling_query_template = """
+       SELECT *
+       FROM 
+           `{{ source_table }}` AS cover
+       WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
+       """
+
+    query = Template(sampling_query_template).render(
+        source_table=table_name, start_time=start_time, end_time=end_time)
+
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
-    
+
     with beam.Pipeline(options=pipeline_options) as p:
-        raw_examples = ( p
-                   | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
-        
+        raw_examples = (p
+                        | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
+
         examples = (raw_examples
                     | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema)))
 
         stats = (examples
-                | 'BeamExamplesToArrow' >> utils.batch_util.BatchExamplesToArrowRecordBatches() 
-                | 'GenerateStatistics' >> GenerateStatistics()
-                )
-        
-        _ = (stats       
-            | 'WriteStatsOutput' >> beam.io.WriteToTFRecord(
-                  file_path_prefix=stats_output_path,
-                  shard_name_template='',
-                  coder=beam.coders.ProtoCoder(
-                      statistics_pb2.DatasetFeatureStatisticsList)))
-        
+                 | 'BeamExamplesToArrow' >> utils.batch_util.BatchExamplesToArrowRecordBatches()
+                 | 'GenerateStatistics' >> GenerateStatistics()
+                 )
+
         _ = (stats
-            | 'ValidateStatistics' >> beam.Map(validate_statistics, schema=schema)
-            | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
-                                            file_path_prefix=anomalies_output_path,
-                                            shard_name_template='',
-                                            append_trailing_newlines=False))
-        
+             | 'WriteStatsOutput' >> beam.io.WriteToTFRecord(
+                 file_path_prefix=stats_output_path,
+                 shard_name_template='',
+                 coder=beam.coders.ProtoCoder(
+                     statistics_pb2.DatasetFeatureStatisticsList)))
 
-    
-
+        _ = (stats
+             | 'ValidateStatistics' >> beam.Map(validate_statistics, schema=schema)
+             | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
+                 file_path_prefix=anomalies_output_path,
+                 shard_name_template='',
+                 append_trailing_newlines=False))

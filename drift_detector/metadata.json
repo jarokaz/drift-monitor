@@ -11,23 +11,6 @@
       ]
     },
     {
-      "name": "instance_type",
-      "label": "Instance type.",
-      "helpText": "A type of instances in request_response log_table",
-      "regexes": [
-        "LIST|OBJECT"
-      ]
-    },
-    {
-      "name": "feature_names",
-      "label": "Feature names.",
-      "helpText": "A list of feature names for instances in simple list format.",
-      "is_optional": true,
-      "regexes": [
-        "[,-_a-zA-Z0-9]+"
-      ]
-    },
-    {
       "name": "start_time",
       "label": "Start time.",
       "helpText": "A time window start time in YYYY-MM-DDTHH:MM:SS format.",
