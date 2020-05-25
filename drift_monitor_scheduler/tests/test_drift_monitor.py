@@ -24,8 +24,8 @@ import time
 
 import tensorflow as tf
 
-from drift_monitor.drift_monitor_scheduler import create_drift_detector_task
-from drift_monitor.drift_monitor_scheduler import schedule_drift_detector_runs
+from drift_monitor_scheduler.drift_monitor_scheduler import create_drift_detector_task
+from drift_monitor_scheduler.drift_monitor_scheduler import schedule_drift_detector_runs
 
 
 
@@ -39,8 +39,8 @@ def test_create_drift_detector_task():
     request_response_log_table = 'mlops-dev-env.data_validation.covertype_logs_tf'
 
     schedule_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
-    start_time = datetime.datetime.fromisoformat('2020-05-15T00:15:00')
-    end_time = datetime.datetime.fromisoformat('2020-05-15T05:51:00')
+    start_time = datetime.datetime.fromisoformat('2020-05-25T16:00:00')
+    end_time = datetime.datetime.fromisoformat('2020-05-25T17:00:00')
     output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/{}'.format(time.strftime("%Y%m%d-%H%M%S"))
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     baseline_stats_file = None
@@ -69,12 +69,12 @@ def test_schedule_drift_detector_runs( ):
     template_path = 'gs://mlops-dev-workspace/flex-templates/drift-detector.json'
     region = 'us-central1'
     task_queue = 'drift-monitor-runs'
-    request_response_log_table = 'mlops-dev-env.data_validation.covertype_classifier_logs_tf'
+    request_response_log_table = 'mlops-dev-env.data_validation.covertype_ogs_tf'
 
     #beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=180)
-    beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=600) 
+    beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=360) 
     time_window = 60 
-    num_of_runs = 24 
+    num_of_runs = 6
     output_root_folder = 'gs://mlops-dev-workspace/drift_monitor/output/tf'
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     baseline_stats_file = None
