@@ -26,7 +26,7 @@ import tensorflow as tf
 from tensorflow_metadata.proto.v0 import schema_pb2
 from google.protobuf.json_format import MessageToDict, MessageToJson, ParseDict
 
-from coders.beam_example_coders import InstanceCoder, _validate_request_response_log_schema
+from coders.beam_example_coders import InstanceCoder 
 
 schema_dict = {
     'feature': [
@@ -108,6 +108,7 @@ def test_instancecoder_object(coder):
     print(example)
     example = next(examples)
     print('/n')
+    print(example)
 
 def test_instancecoder_list(coder):
     examples = coder.process(_log_record_list_format)

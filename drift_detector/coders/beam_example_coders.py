@@ -57,13 +57,12 @@ class InstanceCoder(beam.DoFn):
 
   def process(self, log_record: Dict):
 
-    _validate_request_response_log_schema(log_record)
-
     raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
 
     if type(raw_data[_INSTANCES_KEY][0]) is dict:
       for instance in raw_data[_INSTANCES_KEY]:
         for name, value in instance.items():
+          value = value if type(value) == list else [value]
           instance[name] = np.array(value, dtype=self._features[name])
         yield instance
     elif type(raw_data[_INSTANCES_KEY][0]) is list:

@@ -126,10 +126,11 @@ def generate_drift_reports(
        FROM 
            `{{ source_table }}` AS cover
        WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
+       LIMIT 2
        """
 
     query = Template(sampling_query_template).render(
-        source_table=table_name, start_time=start_time, end_time=end_time)
+        source_table=request_response_log_table, start_time=start_time, end_time=end_time)
 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)

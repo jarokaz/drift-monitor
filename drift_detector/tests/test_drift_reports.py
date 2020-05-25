@@ -33,7 +33,7 @@ def test_generate_drift_reports():
     request_response_log_table = 'data_validation.covertype_logs_tf'
     project_id = 'mlops-dev-env'
     baseline_stats = None
-    output_path = 'gs:// mlops-dev-workspace/drift_monitor/output/tf/test'
+    output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/test'
     start_time = '2020-05-23T17:00:00'
     end_time = '2020-05-23T23:00:00'
 
