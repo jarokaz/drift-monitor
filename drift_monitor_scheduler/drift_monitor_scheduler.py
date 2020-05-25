@@ -41,10 +41,9 @@ def create_drift_detector_task(
     request_response_log_table: Text,
     start_time: datetime.datetime,
     end_time: datetime.datetime,
-    instance_type: Text,
-    feature_names: List[Text],
     output_path: Text,
     schema_file: Text,
+    baseline_stats_file: Optional[Text] = None,
     setup_file: Optional[Text] = _SCHEMA_FILE_PATH
 ) -> Dict:
     """Creates a Cloud Task that submits a run of the Drift Detector template."""
@@ -56,18 +55,9 @@ def create_drift_detector_task(
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
 
-    if instance_type == 'OBJECT':
-        feature_names = None 
-    elif instance_type == 'LIST':
-        if not feature_names:
-            raise TypeError("Feature names must be provided for the LIST instance types")
-        feature_names = ','.join(feature_names)
-    else:
-        raise TypeError("The instance_type parameter must be LIST or OBJECT")
 
     parameters = {
         'request_response_log_table': request_response_log_table,
-        'instance_type': instance_type,
         'start_time': start_time,
         'end_time': end_time,
         'output_path': output_path,
@@ -75,8 +65,8 @@ def create_drift_detector_task(
         'setup_file': setup_file
     }
 
-    if feature_names:
-        parameters['feature_names'] = feature_names
+    if baseline_stats_file:
+        parameters['baseline_stats_file'] = baseline_stats_file
 
     body = {
         'launch_parameter':
@@ -119,10 +109,9 @@ def schedule_drift_detector_runs(
         time_window: int,
         num_of_runs: int,
         request_response_log_table: Text,
-        instance_type: Text,
-        feature_names: List[Text],
         output_root_folder: Text,
-        schema_file: Text, 
+        schema_file: Text,
+        baseline_stats_file: Optional[Text] = None 
 ):
     beginning_time = datetime.datetime(
         beginning_time.year, 
@@ -152,10 +141,9 @@ def schedule_drift_detector_runs(
             request_response_log_table=request_response_log_table,
             start_time=start_time,
             end_time=end_time,
-            instance_type=instance_type,
-            feature_names=feature_names,
             output_path=output_path,
-            schema_file=schema_file
+            schema_file=schema_file,
+            baseline_stats_file=baseline_stats_file
         )
         
         logging.log(logging.INFO, response)

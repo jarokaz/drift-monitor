@@ -43,6 +43,7 @@ def test_create_drift_detector_task():
     end_time = datetime.datetime.fromisoformat('2020-05-15T05:51:00')
     output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/{}'.format(time.strftime("%Y%m%d-%H%M%S"))
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
+    baseline_stats_file = None
 
     response = create_drift_detector_task(
         project_id=project_id,
@@ -54,10 +55,9 @@ def test_create_drift_detector_task():
         request_response_log_table=request_response_log_table,
         start_time=start_time,
         end_time=end_time,
-        instance_type=instance_type,
-        feature_names=feature_names,
         output_path=output_path,
-        schema_file=schema_file
+        schema_file=schema_file,
+        baseline_stats_file=baseline_stats_file
     )
 
     print(response)
@@ -70,8 +70,6 @@ def test_schedule_drift_detector_runs( ):
     region = 'us-central1'
     task_queue = 'drift-monitor-runs'
     request_response_log_table = 'mlops-dev-env.data_validation.covertype_classifier_logs_tf'
-    instance_type = 'OBJECT'
-    feature_names = []
 
     #beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=180)
     beginning_time = datetime.datetime.now() - datetime.timedelta(minutes=600) 
@@ -79,6 +77,7 @@ def test_schedule_drift_detector_runs( ):
     num_of_runs = 24 
     output_root_folder = 'gs://mlops-dev-workspace/drift_monitor/output/tf'
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
+    baseline_stats_file = None
 
     response = schedule_drift_detector_runs(
         project_id=project_id,
@@ -90,8 +89,7 @@ def test_schedule_drift_detector_runs( ):
         time_window=time_window,
         num_of_runs=num_of_runs,
         request_response_log_table=request_response_log_table,
-        instance_type=instance_type,
-        feature_names=feature_names,
         output_root_folder=output_root_folder,
-        schema_file=schema_file
+        schema_file=schema_file,
+        baseline_stats_file=baseline_stats_file
     )
