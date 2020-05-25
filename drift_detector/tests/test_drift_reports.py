@@ -34,8 +34,8 @@ def test_generate_drift_reports():
     project_id = 'mlops-dev-env'
     baseline_stats = None
     output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/test'
-    start_time = '2020-05-23T17:00:00'
-    end_time = '2020-05-23T23:00:00'
+    start_time = '2020-05-25T16:00:00'
+    end_time = '2020-05-25T22:00:00'
 
     schema_path = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     schema = load_schema_text(schema_path)
