@@ -36,9 +36,7 @@ def test_create_drift_detector_task():
     template_path = 'gs://mlops-dev-workspace/flex-templates/drift-detector.json'
     region = 'us-central1'
     task_queue = 'drift-monitor-runs'
-    request_response_log_table = 'mlops-dev-env.data_validation.covertype_classifier_logs_tf'
-    instance_type = 'OBJECT'
-    feature_names = []
+    request_response_log_table = 'mlops-dev-env.data_validation.covertype_logs_tf'
 
     schedule_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
     start_time = datetime.datetime.fromisoformat('2020-05-15T00:15:00')
