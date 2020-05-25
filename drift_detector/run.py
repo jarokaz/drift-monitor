@@ -40,7 +40,6 @@ from tensorflow_data_validation import load_statistics
 from tensorflow_data_validation import load_schema_text
 
 from utils.drift_reports import generate_drift_reports
-from utils.drift_reports import InstanceType
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
