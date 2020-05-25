@@ -30,37 +30,12 @@ from tensorflow_metadata.proto.v0 import schema_pb2
 
 _RAW_DATA_COLUMN = 'raw_data'
 _INSTANCES_KEY = 'instances'
-_LOGGING_TABLE_SCHEMA = {
-  'model': lambda x: type(x) is str,
-  'model_version': lambda x: type(x) is str,
-  'time': lambda x: lambda x: type(x) is str,
-  'raw_data': lambda x: type(x) is str, 
-  'raw_prediction': lambda x: type(x) is str,
-  'groundtruth': lambda x: type(x) is str or x is None
-}
 
 _SCHEMA_TO_NUMPY = {
   schema_pb2.FeatureType.BYTES:  np.str,
   schema_pb2.FeatureType.INT: np.int64,
   schema_pb2.FeatureType.FLOAT: np.float
 }
-
-
-def _validate_request_response_log_schema(log_record: Dict):
-    """Validates that a log record conforms to schema."""
-    
-    incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
-    if bool(incorrect_features):
-      raise TypeError("Received log record with incorrect features %s" %
-                       incorrect_features)
-       
-    features_with_wrong_type = [key for key, value in log_record.items() 
-                                if not _LOGGING_TABLE_SCHEMA[key](value)]
-
-    if bool(features_with_wrong_type):
-      raise TypeError("Received log record with incorrect feature types %s" %
-                       features_with_wrong_type)
-    
     
 @beam.typehints.with_input_types(Dict)
 @beam.typehints.with_output_types(types.BeamExample)
@@ -99,42 +74,3 @@ class InstanceCoder(beam.DoFn):
       raise TypeError("Unsupported input instance format. Only JSON list or JSON object instances are supported")
         
   
-            
-      
-
-#@beam.typehints.with_input_types(Dict)
-#@beam.typehints.with_output_types(types.BeamExample)
-#class SimpleListCoder(beam.DoFn):
-#  """A DoFn which converts an AI Platform Prediction input with instances in 
-#  a simple list format to types.BeamExample elements."""
-#
-#  def __init__(self, feature_names=None):
-#    self._example_size = beam.metrics.Metrics.counter(
-#      constants.METRICS_NAMESPACE, "example_size")
-#    
-#    self._feature_names = feature_names
-#
-#  def process(self, log_record: Dict):
-#    
-#    _validate_request_response_log_schema(log_record)
-#            
-#    raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
-#    if not type(raw_data[_INSTANCES_KEY][0]) is list:
-#        raise TypeError("Expected instances in a simple list format.")
-#        
-#    if not self._feature_names:
-#        raise TypeError("Feature names are required for instances in a simple list format.")
-#    
-#    if len(self._feature_names) != len(raw_data[_INSTANCES_KEY][0]):
-#        raise TypeError("The provided feature list does not match the length of an instance.")
-#                
-#    for instance in raw_data[_INSTANCES_KEY]:
-#        yield {name: np.array([value])
-#            for name, value in zip(self._feature_names, instance)}
-#            
-#
-#    
-    
-
-    
-

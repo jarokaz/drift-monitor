@@ -43,6 +43,53 @@ from coders.beam_example_coders import InstanceCoder
 _STATS_FILENAME='stats.pb'
 _ANOMALIES_FILENAME='anomalies.pbtxt'
 
+_LOGGING_TABLE_SCHEMA = {
+  'model': 'STRING',
+  'model_version':  'STRING',
+  'time': 'TIMESTAMP',
+  'raw_data': 'STRING',
+  'raw_prediction': 'STRING',
+  'groundtruth': 'STRING'
+}
+
+def _validate_request_response_log_schema(request_response_log: str):
+    """Validates that a provided request response log table
+    conforms to schema."""
+
+    query_template = """
+       SELECT *
+       FROM 
+           `{{ source_table }}` 
+       LIMIT 1
+       """
+
+    query = Template(query_template).render(
+      source_table=request_response_log) 
+
+    client = bigquery.Client()
+    query_job = client.query(query)
+    rows = query_job.result()
+    schema = {field.name: field.field_type for field in rows.schema} 
+
+    if schema != _LOGGING_TABLE_SCHEMA:
+      raise TypeError("The table - {} - does not conform to the reuquest_response log table schema". format(
+          request_response_log))
+    return
+
+
+    incorrect_features = set(log_record.keys()) - set(_LOGGING_TABLE_SCHEMA.keys())
+    if bool(incorrect_features):
+      raise TypeError("Received log record with incorrect features %s" %
+                       incorrect_features)
+       
+    features_with_wrong_type = [key for key, value in log_record.items() 
+                                if not _LOGGING_TABLE_SCHEMA[key](value)]
+
+    if bool(features_with_wrong_type):
+      raise TypeError("Received log record with incorrect feature types %s" %
+                       features_with_wrong_type)
+
+
 def _generate_query(table_name, start_time, end_time):
   """Prepares a data sampling query."""
 

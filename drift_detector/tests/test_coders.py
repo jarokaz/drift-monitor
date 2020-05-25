@@ -118,20 +118,3 @@ def test_instancecoder_list(coder):
     print('/n')
     print(example)
 
-
-def test_validate_request_response_log_schema():
-    result = _validate_request_response_log_schema(_log_record_object_format)
-    print(result)
-
-
-def test_list_coder():
-    coder = SimpleListCoder(_feature_names)
-    examples = coder.process(_log_record_list_format)
-    example = tf.io.parse_single_example(next(examples),
-                                            _covertype_feature_description)
-    example = {key: _convert_to_dense(value) for key, value in example.items()}
-    print(example)
-    example = tf.io.parse_single_example(next(examples),
-                                            _covertype_feature_description)
-    example = {key: _convert_to_dense(value) for key, value in example.items()}
-    print(example)

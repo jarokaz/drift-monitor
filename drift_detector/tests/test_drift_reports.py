@@ -25,7 +25,7 @@ import tensorflow as tf
 
 from tensorflow_data_validation import load_schema_text
 from apache_beam.options.pipeline_options import PipelineOptions, GoogleCloudOptions
-from utils.drift_reports import generate_drift_reports
+from utils.drift_reports import generate_drift_reports, _validate_request_response_log_schema
 
 
 def test_generate_drift_reports():
@@ -52,3 +52,8 @@ def test_generate_drift_reports():
         schema=schema, 
         baseline_stats=baseline_stats,
         pipeline_options=pipeline_options)
+
+def test_validate_request_response_log_schema():
+
+    request_response_log_table = 'data_validation.covertype_logs_tf'
+    _validate_request_response_log_schema(request_response_log_table)
