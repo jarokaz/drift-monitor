@@ -16,6 +16,7 @@
 
 
 import argparse
+import click
 import datetime
 import time
 import json
@@ -98,12 +99,24 @@ def create_drift_detector_task(
 
     return response
 
-
+@click.command()
+@click.option('--project', 'project_id', help='A GCP project ID', required=True)
+@click.option('--region', help='A GCP region', required=True)
+@click.option('--queue', 'task_queue', help='A Cloud Tasks queue to use for scheduling', required=True)
+@click.option('--account', 'service_account', help='The service account to be used by runs', required=True)
+@click.option('--template_path', help='A path to the Dataflow template', required=True)
+@click.option('--beginning_time', help='A beginning of the first time window', required=True)
+@click.option('--time_window', help='Length of the time window', required=True)
+@click.option('--num_of_runs', help='A number of runs', required=True)
+@click.option('--log_table', 'request_response_log_table', help='A full name of the request_response log table', required=True)
+@click.option('--output', 'output_root_folder', help='A GCS location for the output statistics and anomalies files', required=True)
+@click.option('--schema', 'schema_file', help='A GCS location of the schema file', required=True)
+@click.option('--stats', 'baseline_stats_file', help='A GCS location of the baseline stats file', required=True)
 def schedule_drift_detector_runs(
         project_id: str,
+        region: str,
         task_queue: str,
         service_account: str,
-        region: str,
         template_path: Text,
         beginning_time: datetime.datetime,
         time_window: int,
@@ -113,6 +126,7 @@ def schedule_drift_detector_runs(
         schema_file: Text,
         baseline_stats_file: Optional[Text] = None 
 ):
+    return
     beginning_time = datetime.datetime(
         beginning_time.year, 
         beginning_time.month, 
@@ -148,3 +162,6 @@ def schedule_drift_detector_runs(
         
         logging.log(logging.INFO, response)
 
+
+if __name__ == '__main__':
+    schedule_drift_detector_runs()
