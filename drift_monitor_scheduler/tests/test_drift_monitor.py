@@ -17,6 +17,7 @@
 
 import base64
 import datetime
+import logging
 import json
 import mock
 import pytest
@@ -64,6 +65,8 @@ def test_create_drift_detector_task():
 
 def test_schedule_drift_detector_runs( ):
 
+    logging.getLogger().setLevel(logging.INFO)
+
     project_id = 'mlops-dev-env' 
     service_account = 'drift-monitor@mlops-dev-env.iam.gserviceaccount.com'
     template_path = 'gs://mlops-dev-workspace/flex-templates/drift-detector.json'
@@ -73,12 +76,12 @@ def test_schedule_drift_detector_runs( ):
 
     beginning_time = datetime.datetime.fromisoformat('2020-05-25T16:00:00')
     time_window = 60 
-    num_of_runs = 6
+    num_of_runs = 2
     output_root_folder = 'gs://mlops-dev-workspace/drift_monitor/output/tf'
     schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     baseline_stats_file = None
 
-    response = schedule_drift_detector_runs(
+    schedule_drift_detector_runs(
         project_id=project_id,
         task_queue=task_queue,
         service_account=service_account,

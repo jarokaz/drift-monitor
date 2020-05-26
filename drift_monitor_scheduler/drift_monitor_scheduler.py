@@ -22,7 +22,6 @@ import time
 import json
 import googleapiclient.discovery
 import logging
-import pytz
 
 from typing import List, Optional, Text, Union, Dict
 from google.cloud import tasks_v2
@@ -56,7 +55,6 @@ def create_drift_detector_task(
 
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
-
 
     parameters = {
         'request_response_log_table': request_response_log_table,
@@ -106,7 +104,7 @@ def create_drift_detector_task(
 @click.option('--queue', 'task_queue', help='A Cloud Tasks queue to use for scheduling', required=True)
 @click.option('--account', 'service_account', help='The service account to be used by runs', required=True)
 @click.option('--template_path', help='A path to the Dataflow template', required=True)
-@click.option('--beginning_time', help='A beginning of the first time window. UTC time zone assumed.', required=True, type=click.DateTime())
+@click.option('--beginning_time', help='A beginning of the first time window using UTC time.', required=True, type=click.DateTime())
 @click.option('--time_window', help='Length of the time window', required=True, type=int)
 @click.option('--num_of_runs', help='A number of runs', required=True, type=int)
 @click.option('--log_table', 'request_response_log_table', help='A full name of the request_response log table', required=True)
@@ -127,8 +125,8 @@ def schedule_drift_detector_runs(
         schema_file: Text,
         baseline_stats_file: Optional[Text] = None 
 ):
+    """Schedules a series of drift detector runs."""
 
-    beginning_time = beginning_time.replace(tzinfo=pytz.utc)
     beginning_time = beginning_time.replace(microsecond=0)
     beginning_time = beginning_time.replace(second=0)
 
@@ -136,7 +134,7 @@ def schedule_drift_detector_runs(
         end_time = beginning_time + datetime.timedelta(minutes=(run_num + 1)*time_window)
         start_time = end_time - datetime.timedelta(minutes=time_window)
         schedule_time = end_time + datetime.timedelta(minutes=2)
-        
+
         output_path = '{}/{}_{}'.format(
             output_root_folder,
             start_time.isoformat(sep='T', timespec='minutes'),
@@ -157,7 +155,7 @@ def schedule_drift_detector_runs(
             schema_file=schema_file,
             baseline_stats_file=baseline_stats_file
         )
-        
+
         logging.log(logging.INFO, response)
 
 
