@@ -22,6 +22,7 @@ import time
 import json
 import googleapiclient.discovery
 import logging
+import pytz
 
 from typing import List, Optional, Text, Union, Dict
 from google.cloud import tasks_v2
@@ -105,13 +106,13 @@ def create_drift_detector_task(
 @click.option('--queue', 'task_queue', help='A Cloud Tasks queue to use for scheduling', required=True)
 @click.option('--account', 'service_account', help='The service account to be used by runs', required=True)
 @click.option('--template_path', help='A path to the Dataflow template', required=True)
-@click.option('--beginning_time', help='A beginning of the first time window', required=True)
-@click.option('--time_window', help='Length of the time window', required=True)
-@click.option('--num_of_runs', help='A number of runs', required=True)
+@click.option('--beginning_time', help='A beginning of the first time window. UTC time zone assumed.', required=True, type=click.DateTime())
+@click.option('--time_window', help='Length of the time window', required=True, type=int)
+@click.option('--num_of_runs', help='A number of runs', required=True, type=int)
 @click.option('--log_table', 'request_response_log_table', help='A full name of the request_response log table', required=True)
 @click.option('--output', 'output_root_folder', help='A GCS location for the output statistics and anomalies files', required=True)
 @click.option('--schema', 'schema_file', help='A GCS location of the schema file', required=True)
-@click.option('--stats', 'baseline_stats_file', help='A GCS location of the baseline stats file', required=True)
+@click.option('--stats', 'baseline_stats_file', help='A GCS location of the baseline stats file')
 def schedule_drift_detector_runs(
         project_id: str,
         region: str,
@@ -126,13 +127,10 @@ def schedule_drift_detector_runs(
         schema_file: Text,
         baseline_stats_file: Optional[Text] = None 
 ):
-    return
-    beginning_time = datetime.datetime(
-        beginning_time.year, 
-        beginning_time.month, 
-        beginning_time.day, 
-        beginning_time.hour, 
-        beginning_time.minute)
+
+    beginning_time = beginning_time.replace(tzinfo=pytz.utc)
+    beginning_time = beginning_time.replace(microsecond=0)
+    beginning_time = beginning_time.replace(second=0)
 
     for run_num in range(num_of_runs):
         end_time = beginning_time + datetime.timedelta(minutes=(run_num + 1)*time_window)
@@ -164,4 +162,5 @@ def schedule_drift_detector_runs(
 
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
     schedule_drift_detector_runs()

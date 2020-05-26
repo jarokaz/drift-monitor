@@ -24,6 +24,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        dms=dms:schedule_drift_detector_runs
+        dms=drift_monitor_scheduler:schedule_drift_detector_runs
     ''',
 )
