@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Schedules a set of Drift Detector jobs. """
+"""Helper routines to trigger runs of the drift detector Dataflow template. """
 
 
 import argparse
@@ -31,7 +31,40 @@ from google.protobuf import timestamp_pb2
 _SCHEMA_FILE_PATH = './setup.py'
 _JOB_NAME_PREFIX = 'data-drift-detector'
 
+def _prepare_drift_detector_request_body(
+    job_name: Text,
+    template_path: Text,
+    log_table: Text,
+    start_time: Text ,
+    end_time: Text,
+    output_location: Text,
+    schema_location: Text,
+    baseline_stats_location: Text
+) -> Dict:
+    """Prepares a body of the data drift Dataflow template run request."""
 
+    parameters = {
+        'request_response_log_table': log_table,
+        'start_time': start_time,
+        'end_time': end_time,
+        'output_path': output_location,
+        'schema_file': schema_location,
+        'setup_file': _SCHEMA_FILE_PATH
+    }
+
+    if baseline_stats_location:
+        parameters['baseline_stats_path'] = baseline_stats_location 
+    
+    body = {
+        'launch_parameter': 
+            {
+                'jobName': job_name,
+                'parameters' : parameters,
+                'containerSpecGcsPath': template_path
+            }}
+
+    return body
+    
 def run_detector(
     project_id: Text,
     region: Text,
@@ -43,33 +76,25 @@ def run_detector(
     schema_location: Text,
     baseline_stats_location: Optional[Text]=None,
 ) -> Dict:
-    """Runs a drift detector Dataflow template."""
+    """Runs the drift detector Dataflow template."""
 
     service = googleapiclient.discovery.build('dataflow', 'v1b3')
+
+    job_name = '{}-{}'.format(_JOB_NAME_PREFIX, time.strftime("%Y%m%d-%H%M%S"))
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
-    output_path = '{}/{}_{}'.format(output_location, start_time, end_time)
+    output_location = '{}/{}_{}_{}'.format(output_location, job_name, start_time, end_time)
 
-    parameters = {
-    'request_response_log_table': log_table,
-    'start_time': start_time,
-    'end_time': end_time,
-    'output_path': output_path,
-    'schema_file': schema_location,
-    'setup_file': './setup.py',
-    }
-
-    if baseline_stats_location:
-        parameters['baseline_stats_file'] = baseline_stats_location
-
-    job_name = "data-drift-detector{}".format(time.strftime("%Y%m%d-%H%M%S"))
-    body = {
-        'launch_parameter': 
-            {
-                'jobName': job_name,
-                'parameters' : parameters,
-                'containerSpecGcsPath': template_path
-            }}
+    body = _prepare_drift_detector_request_body(
+        job_name=job_name,
+        template_path=template_path,
+        log_table=log_table,
+        start_time=start_time,
+        end_time=end_time,
+        output_location=output_location,
+        schema_location=schema_location,
+        baseline_stats_location=baseline_stats_location
+    )
 
     request = service.projects().locations().flexTemplates().launch(
         location=region,
@@ -95,7 +120,7 @@ def schedule_detector(
     schema_location: Text,
     baseline_stats_location: Optional[Text]=None,
 ) -> Dict:
-    """Creates a Cloud Task that submits a run of the Drift Detector template."""
+    """Creates a Cloud Task that submits a run of the drift detector template."""
 
     service_uri = 'https://dataflow.googleapis.com/v1b3/projects/{}/locations/{}/flexTemplates:launch'.format(
         project_id, region)
