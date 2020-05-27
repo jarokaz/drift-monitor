@@ -15,6 +15,7 @@
 """A command line interface to trigger and schedule drift detector runs.  """
 
 import click
+import datetime
 import logging
 
 from handlers import run_drift_detector
@@ -49,15 +50,8 @@ def cli():
 @click.option('--output', envvar='DM_OUTPUT', help='A GCS location for the output statistics and anomalies files', required=True)
 @click.option('--schema',  envvar='DM_SCHEMA', help='A GCS location of the schema file', required=True)
 @click.option('--baseline_stats', envvar='DM_STATS', help='A GCS location of the baseline stats file')
-def run(template_path,
-    project,
-    region,
-    log_table,
-    start_time,
-    end_time,
-    output,
-    schema,
-    baseline_stats
+def run(template_path, project, region, log_table, start_time,
+    end_time, output, schema, baseline_stats
 ):
     response = run_drift_detector(
         project_id=project,
@@ -70,49 +64,48 @@ def run(template_path,
         schema_location=schema,
         baseline_stats_location=baseline_stats
     )
-    logging.log(logging.INFO, "Submited a drift detector template run: DataFlow Job ID={}".format(
+    logging.log(logging.INFO, "Submitted a drift detector template run: DataFlow Job ID={}".format(
         response['job']['id'])) 
 
 @cli.command()
-def schedule():
-    print('schedule')
+@click.argument('template_path')
+@click.argument('execute_time', type=click.DateTime())
+@click.option('--queue', envvar='DM_QUEUE', help='A Cloud Tasks queue to use for scheduling', required=True)
+@click.option('--account', envvar='DM_ACCOUNT', help='An email address of a service account to use for scheduling', required=True)
+@click.option('--project', envvar='DM_PROJECT_ID', help='A GCP project ID', required=True)
+@click.option('--region', envvar='DM_REGION', help='A GCP region', required=True)
+@click.option('--log_table', envvar='DM_LOG_TABLE', help='A full name of the request_response log table', required=True)
+@click.option('--start_time', envvar='DM_START_TIME', help='The beginning of a time window in the log table (UTC time).', required=True, type=click.DateTime())
+@click.option('--end_time', envvar='DM_END_TIME', help='The end of a time window in the log table (UTC time).', required=True, type=click.DateTime())
+@click.option('--output', envvar='DM_OUTPUT', help='A GCS location for the output statistics and anomalies files', required=True)
+@click.option('--schema',  envvar='DM_SCHEMA', help='A GCS location of the schema file', required=True)
+@click.option('--baseline_stats', envvar='DM_STATS', help='A GCS location of the baseline stats file')
+def schedule(template_path, queue, account, execute_time, project,
+    region, log_table, start_time, end_time, output, schema, baseline_stats
+):
+    print(execute_time)
+    if execute_time < datetime.datetime.now():
+        logging.log(logging.INFO, "Cannot schedule a task in the past. Exiting ...")
+        return
 
-#@cli.group()
-#def monitors():
-#    pass
-#
-#@monitors.command()
-#def add():
-#    print('add')
-#
-#@monitors.command()
-#def list():
-#    print('list')
-#
-#@monitors.command()
-#def describe():
-#    print('describe')
-#
-#@cli.group()
-#def reports():
-#    pass
-#
-#@reports.command()
-#def run():
-#    print('run')
-#
-#@reports.command()
-#def schedule():
-#    print('schedule')
-#
-#@reports.command()
-#def list_scheduled():
-#    print('List_scheduled')
-#
-#@reports.command()
-#def list_available():
-#    print('List_available')
-#
+    response = schedule_drift_detector(
+        task_queue=queue,
+        service_account=account,
+        schedule_time=execute_time,
+        project_id=project,
+        region=region,
+        template_path=template_path,
+        log_table=log_table,
+        start_time=start_time,
+        end_time=end_time,
+        output_location=output,
+        schema_location=schema,
+        baseline_stats_location=baseline_stats
+    ) 
+
+    logging.log(logging.INFO, "Scheduled the drift detector template to run at: {}".format(
+        execute_time.isoformat(timespec='seconds'))) 
+
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
     cli()
