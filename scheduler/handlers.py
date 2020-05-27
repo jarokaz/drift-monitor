@@ -32,20 +32,68 @@ _SCHEMA_FILE_PATH = './setup.py'
 _JOB_NAME_PREFIX = 'data-drift-detector'
 
 
-def create_drift_detector_task(
+def run_detector(
     project_id: Text,
     region: Text,
-    task_queue: Text,
-    service_account: Text,
     template_path: Text,
-    schedule_time: datetime.datetime,
-    request_response_log_table: Text,
+    log_table: Text,
     start_time: datetime.datetime,
     end_time: datetime.datetime,
-    output_path: Text,
-    schema_file: Text,
-    baseline_stats_file: Optional[Text] = None,
-    setup_file: Optional[Text] = _SCHEMA_FILE_PATH
+    output_location: Text,
+    schema_location: Text,
+    baseline_stats_location: Optional[Text]=None,
+) -> Dict:
+    """Runs a drift detector Dataflow template."""
+
+    service = googleapiclient.discovery.build('dataflow', 'v1b3')
+    start_time = start_time.isoformat(sep='T', timespec='seconds')
+    end_time = end_time.isoformat(sep='T', timespec='seconds')
+    output_path = '{}/{}_{}'.format(output_location, start_time, end_time)
+
+    parameters = {
+    'request_response_log_table': log_table,
+    'start_time': start_time,
+    'end_time': end_time,
+    'output_path': output_path,
+    'schema_file': schema_location,
+    'setup_file': './setup.py',
+    }
+
+    if baseline_stats_location:
+        parameters['baseline_stats_file'] = baseline_stats_location
+
+    job_name = "data-drift-detector{}".format(time.strftime("%Y%m%d-%H%M%S"))
+    body = {
+        'launch_parameter': 
+            {
+                'jobName': job_name,
+                'parameters' : parameters,
+                'containerSpecGcsPath': template_path
+            }}
+
+    request = service.projects().locations().flexTemplates().launch(
+        location=region,
+        projectId=project_id,
+        body=body)
+
+    response = request.execute()
+
+    return response
+
+
+def schedule_detector(
+    task_queue: Text,
+    service_account: Text,
+    schedule_time: datetime.datetime,
+    project_id: Text,
+    region: Text,
+    template_path: Text,
+    log_table: Text,
+    start_time: datetime.datetime,
+    end_time: datetime.datetime,
+    output_location: Text,
+    schema_location: Text,
+    baseline_stats_location: Optional[Text]=None,
 ) -> Dict:
     """Creates a Cloud Task that submits a run of the Drift Detector template."""
 
@@ -98,19 +146,7 @@ def create_drift_detector_task(
 
     return response
 
-@click.command()
-@click.option('--project', 'project_id', help='A GCP project ID', required=True)
-@click.option('--region', help='A GCP region', required=True)
-@click.option('--queue', 'task_queue', help='A Cloud Tasks queue to use for scheduling', required=True)
-@click.option('--account', 'service_account', help='The service account to be used by runs', required=True)
-@click.option('--template_path', help='A path to the Dataflow template', required=True)
-@click.option('--beginning_time', help='A beginning of the first time window using UTC time.', required=True, type=click.DateTime())
-@click.option('--time_window', help='Length of the time window', required=True, type=int)
-@click.option('--num_of_runs', help='A number of runs', required=True, type=int)
-@click.option('--log_table', 'request_response_log_table', help='A full name of the request_response log table', required=True)
-@click.option('--output', 'output_root_folder', help='A GCS location for the output statistics and anomalies files', required=True)
-@click.option('--schema', 'schema_file', help='A GCS location of the schema file', required=True)
-@click.option('--stats', 'baseline_stats_file', help='A GCS location of the baseline stats file')
+
 def schedule_drift_detector_runs(
         project_id: str,
         region: str,
@@ -161,5 +197,4 @@ def schedule_drift_detector_runs(
         logging.log(logging.INFO, response)
 
 
-if __name__ == '__main__':
-    schedule_drift_detector_runs()
+
