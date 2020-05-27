@@ -124,39 +124,5 @@ def test_schedule_drift_detector():
         baseline_stats_location=baseline_stats_location
     ) 
     
-    print(type(response))
-    print(response)
     print(response)
 
-def test_schedule_drift_detector_runs( ):
-
-    logging.getLogger().setLevel(logging.INFO)
-
-    project_id = 'mlops-dev-env' 
-    service_account = 'drift-monitor@mlops-dev-env.iam.gserviceaccount.com'
-    template_path = 'gs://mlops-dev-workspace/flex-templates/drift-detector.json'
-    region = 'us-central1'
-    task_queue = 'drift-monitor-runs'
-    request_response_log_table = 'mlops-dev-env.data_validation.covertype_logs_tf'
-
-    beginning_time = datetime.datetime.fromisoformat('2020-05-25T16:00:00')
-    time_window = 60 
-    num_of_runs = 2
-    output_root_folder = 'gs://mlops-dev-workspace/drift_monitor/output/tf'
-    schema_file = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
-    baseline_stats_file = None
-
-    schedule_drift_detector_runs(
-        project_id=project_id,
-        task_queue=task_queue,
-        service_account=service_account,
-        region=region,
-        template_path=template_path,
-        beginning_time=beginning_time,
-        time_window=time_window,
-        num_of_runs=num_of_runs,
-        request_response_log_table=request_response_log_table,
-        output_root_folder=output_root_folder,
-        schema_file=schema_file,
-        baseline_stats_file=baseline_stats_file
-    )
