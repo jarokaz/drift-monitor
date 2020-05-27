@@ -66,7 +66,6 @@ def test_prepare_drift_detector_request_body():
     print(body)
 
 
-
 def test_run_drift_detector():
     project_id = DEFAULT_PROJECT_ID 
     template_path = DEFAULT_TEMPLATE_PATH
@@ -78,7 +77,7 @@ def test_run_drift_detector():
     schema_location = DEFAULT_SCHEMA_LOCATION 
     baseline_stats_location = None
 
-    response = run_detector(
+    response = run_drift_detector(
         project_id=project_id,
         region=region,
         template_path=template_path,
