@@ -127,6 +127,8 @@ def schedule_drift_detector_runs(
 ):
     """Schedules a series of drift detector runs."""
 
+    logging.getLogger().setLevel(logging.INFO)
+
     beginning_time = beginning_time.replace(microsecond=0)
     beginning_time = beginning_time.replace(second=0)
 
@@ -160,5 +162,4 @@ def schedule_drift_detector_runs(
 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
     schedule_drift_detector_runs()
