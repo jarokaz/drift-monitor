@@ -25,8 +25,8 @@ import time
 
 import tensorflow as tf
 
-from scheduler.handlers import run_detector
-from scheduler.handlers import schedule_detector
+from scheduler.handlers import run_drift_detector
+from scheduler.handlers import schedule_drift_detector
 from scheduler.handlers import _prepare_drift_detector_request_body
 
 DEFAULT_TEMPLATE_PATH = 'gs://mlops-dev-workspace/flex-templates/drift-detector.json'  
@@ -38,6 +38,7 @@ DEFAULT_OUTPUT_LOCATION ='gs://mlops-dev-workspace/drift_monitor/output/tf/tests
 DEFAULT_SCHEMA_LOCATION = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt' 
 DEFAULT_SERVICE_ACCOUNT = 'drift-monitor@mlops-dev-env.iam.gserviceaccount.com'
 DEFAULT_REGION = 'us-central1'
+DEFAULT_TASK_QUEUE = 'drift-monitor-runs'
 
 
 def test_prepare_drift_detector_request_body():
@@ -66,7 +67,7 @@ def test_prepare_drift_detector_request_body():
 
 
 
-def test_run_detector():
+def test_run_drift_detector():
     project_id = DEFAULT_PROJECT_ID 
     template_path = DEFAULT_TEMPLATE_PATH
     region = DEFAULT_REGION 
@@ -92,10 +93,10 @@ def test_run_detector():
     print(response)
     
 
-def test_create_drift_detector_task():
+def test_schedule_drift_detector():
 
-    service_account = 'drift-monitor@mlops-dev-env.iam.gserviceaccount.com'
-    task_queue = 'drift-monitor-runs'
+    service_account = DEFAULT_SERVICE_ACCOUNT 
+    task_queue = DEFAULT_TASK_QUEUE 
     schedule_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
     project_id = DEFAULT_PROJECT_ID  
@@ -108,10 +109,10 @@ def test_create_drift_detector_task():
     schema_location =DEFAULT_SCHEMA_LOCATION 
     baseline_stats_location = None
 
-    response = schedule_detector(
+    response = schedule_drift_detector(
         task_queue=task_queue,
         service_account=service_account,
-        schedule_tiem=schedule_time,
+        schedule_time=schedule_time,
         project_id=project_id,
         region=region,
         template_path=template_path,

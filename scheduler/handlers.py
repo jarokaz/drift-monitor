@@ -65,7 +65,7 @@ def _prepare_drift_detector_request_body(
 
     return body
     
-def run_detector(
+def run_drift_detector(
     project_id: Text,
     region: Text,
     template_path: Text,
@@ -107,7 +107,7 @@ def run_detector(
     return response
 
 
-def schedule_detector(
+def schedule_drift_detector(
     task_queue: Text,
     service_account: Text,
     schedule_time: datetime.datetime,
@@ -142,7 +142,7 @@ def schedule_detector(
         schema_location=schema_location,
         baseline_stats_location=baseline_stats_location
     )
-    
+
     task = {
         'http_request': {
             'http_method': 'POST',
@@ -152,68 +152,14 @@ def schedule_detector(
             'oauth_token': {'service_account_email': service_account}
         }
     }
-
+    
     timestamp = timestamp_pb2.Timestamp()
     timestamp.FromDatetime(schedule_time)
     task['schedule_time'] = timestamp
 
     client = tasks_v2.CloudTasksClient()
     parent = client.queue_path(project_id, region, task_queue)
-
     response = client.create_task(parent, task)
-    logging.info("Created task: {}".format(response.name))
 
     return response
-
-
-def schedule_drift_detector_runs(
-        project_id: str,
-        region: str,
-        task_queue: str,
-        service_account: str,
-        template_path: Text,
-        beginning_time: datetime.datetime,
-        time_window: int,
-        num_of_runs: int,
-        request_response_log_table: Text,
-        output_root_folder: Text,
-        schema_file: Text,
-        baseline_stats_file: Optional[Text] = None 
-):
-    """Schedules a series of drift detector runs."""
-
-    logging.getLogger().setLevel(logging.INFO)
-
-    beginning_time = beginning_time.replace(microsecond=0)
-    beginning_time = beginning_time.replace(second=0)
-
-    for run_num in range(num_of_runs):
-        end_time = beginning_time + datetime.timedelta(minutes=(run_num + 1)*time_window)
-        start_time = end_time - datetime.timedelta(minutes=time_window)
-        schedule_time = end_time + datetime.timedelta(minutes=2)
-
-        output_path = '{}/{}_{}'.format(
-            output_root_folder,
-            start_time.isoformat(sep='T', timespec='minutes'),
-            end_time.isoformat(sep='T', timespec='minutes'),
-        )
-
-        response = create_drift_detector_task(
-            project_id=project_id,
-            region=region,
-            task_queue=task_queue,
-            service_account=service_account,
-            template_path=template_path,
-            schedule_time=schedule_time,
-            request_response_log_table=request_response_log_table,
-            start_time=start_time,
-            end_time=end_time,
-            output_path=output_path,
-            schema_file=schema_file,
-            baseline_stats_file=baseline_stats_file
-        )
-
-        logging.log(logging.INFO, response)
-
-
 
