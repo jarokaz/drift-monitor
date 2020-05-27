@@ -15,6 +15,10 @@
 """A command line interface to trigger and schedule drift detector runs.  """
 
 import click
+import logging
+
+from handlers import run_drift_detector
+from handlers import schedule_drift_detector
 
 #@click.command()
 #@click.option('--project', 'project_id', help='A GCP project ID', required=True)
@@ -34,41 +38,80 @@ import click
 def cli():
     pass
 
-@cli.group()
-def monitors():
-    pass
 
-@monitors.command()
-def add():
-    print('add')
+@cli.command()
+@click.argument('template_path')
+@click.option('--project', envvar='DM_PROJECT_ID', help='A GCP project ID', required=True)
+@click.option('--region', envvar='DM_REGION', help='A GCP region', required=True)
+@click.option('--log_table', envvar='DM_LOG_TABLE', help='A full name of the request_response log table', required=True)
+@click.option('--start_time', envvar='DM_START_TIME', help='The beginning of a time window in the log table (UTC time).', required=True, type=click.DateTime())
+@click.option('--end_time', envvar='DM_END_TIME', help='The end of a time window in the log table (UTC time).', required=True, type=click.DateTime())
+@click.option('--output', envvar='DM_OUTPUT', help='A GCS location for the output statistics and anomalies files', required=True)
+@click.option('--schema',  envvar='DM_SCHEMA', help='A GCS location of the schema file', required=True)
+@click.option('--baseline_stats', envvar='DM_STATS', help='A GCS location of the baseline stats file')
+def run(template_path,
+    project,
+    region,
+    log_table,
+    start_time,
+    end_time,
+    output,
+    schema,
+    baseline_stats
+):
+    response = run_drift_detector(
+        project_id=project,
+        region=region,
+        template_path=template_path,
+        log_table=log_table,
+        start_time=start_time,
+        end_time=end_time,
+        output_location=output,
+        schema_location=schema,
+        baseline_stats_location=baseline_stats
+    )
+    logging.log(logging.INFO, "Submited template run: {}".format(response)) 
 
-@monitors.command()
-def list():
-    print('list')
-
-@monitors.command()
-def describe():
-    print('describe')
-
-@cli.group()
-def reports():
-    pass
-
-@reports.command()
-def run():
-    print('run')
-
-@reports.command()
+@cli.command()
 def schedule():
     print('schedule')
 
-@reports.command()
-def list_scheduled():
-    print('List_scheduled')
-
-@reports.command()
-def list_available():
-    print('List_available')
-
+#@cli.group()
+#def monitors():
+#    pass
+#
+#@monitors.command()
+#def add():
+#    print('add')
+#
+#@monitors.command()
+#def list():
+#    print('list')
+#
+#@monitors.command()
+#def describe():
+#    print('describe')
+#
+#@cli.group()
+#def reports():
+#    pass
+#
+#@reports.command()
+#def run():
+#    print('run')
+#
+#@reports.command()
+#def schedule():
+#    print('schedule')
+#
+#@reports.command()
+#def list_scheduled():
+#    print('List_scheduled')
+#
+#@reports.command()
+#def list_available():
+#    print('List_available')
+#
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
     cli()
