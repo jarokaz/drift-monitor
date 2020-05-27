@@ -80,10 +80,11 @@ def run_detector(
 
     service = googleapiclient.discovery.build('dataflow', 'v1b3')
 
-    job_name = '{}-{}'.format(_JOB_NAME_PREFIX, time.strftime("%Y%m%d-%H%M%S"))
+    time_stamp = time.strftime("%Y%m%d-%H%M%S")
+    job_name = '{}-{}'.format(_JOB_NAME_PREFIX, time_stamp)
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
-    output_location = '{}/{}_{}_{}'.format(output_location, job_name, start_time, end_time)
+    output_location = '{}/{}_{}_{}'.format(output_location, time_stamp, start_time, end_time)
 
     body = _prepare_drift_detector_request_body(
         job_name=job_name,
@@ -124,30 +125,23 @@ def schedule_detector(
 
     service_uri = 'https://dataflow.googleapis.com/v1b3/projects/{}/locations/{}/flexTemplates:launch'.format(
         project_id, region)
-    job_name = '{}-{}'.format(_JOB_NAME_PREFIX, time.strftime("%Y%m%d-%H%M%S"))
 
+    time_stamp = time.strftime("%Y%m%d-%H%M%S")
+    job_name = '{}-{}'.format(_JOB_NAME_PREFIX, time_stamp)
     start_time = start_time.isoformat(sep='T', timespec='seconds')
     end_time = end_time.isoformat(sep='T', timespec='seconds')
+    output_location = '{}/{}_{}_{}'.format(output_location, time_stamp, start_time, end_time)
 
-    parameters = {
-        'request_response_log_table': request_response_log_table,
-        'start_time': start_time,
-        'end_time': end_time,
-        'output_path': output_path,
-        'schema_file': schema_file,
-        'setup_file': setup_file
-    }
-
-    if baseline_stats_file:
-        parameters['baseline_stats_file'] = baseline_stats_file
-
-    body = {
-        'launch_parameter':
-            {
-                'jobName': job_name,
-                'parameters': parameters,
-                'containerSpecGcsPath': template_path
-            }}
+    body = _prepare_drift_detector_request_body(
+        job_name=job_name,
+        template_path=template_path,
+        log_table=log_table,
+        start_time=start_time,
+        end_time=end_time,
+        output_location=output_location,
+        schema_location=schema_location,
+        baseline_stats_location=baseline_stats_location
+    )
     
     task = {
         'http_request': {
