@@ -70,7 +70,8 @@ def run(template_path,
         schema_location=schema,
         baseline_stats_location=baseline_stats
     )
-    logging.log(logging.INFO, "Submited template run: {}".format(response)) 
+    logging.log(logging.INFO, "Submited a drift detector template run: DataFlow Job ID={}".format(
+        response['job']['id'])) 
 
 @cli.command()
 def schedule():
