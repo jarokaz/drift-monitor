@@ -30,27 +30,27 @@ from coders.beam_example_coders import InstanceCoder
 
 schema_dict = {
     'feature': [
-        {'name': 'Elevation', 'type': 'INT'},
-        {'name': 'Aspect', 'type': 'INT'},
-        {'name': 'Slope', 'type': 'INT'},
-        {'name': 'Horizontal_Distance_To_Hydrology', 'type': 'INT'},
-        {'name': 'Vertical_Distance_To_Hydrology', 'type': 'INT'},
-        {'name': 'Horizontal_Distance_To_Roadways', 'type': 'INT'},
-        {'name': 'Hillshade_9am', 'type': 'INT'},
-        {'name': 'Hillshade_Noon', 'type': 'INT'},
-        {'name': 'Hillshade_3pm', 'type': 'INT'},
-        {'name': 'Horizontal_Distance_To_Fire_Points', 'type': 'INT'},
+        {'name': 'Elevation', 'type': 'FLOAT'},
+        {'name': 'Aspect', 'type': 'FLOAT'},
+        {'name': 'Slope', 'type': 'FLOAT'},
+        {'name': 'Horizontal_Distance_To_Hydrology', 'type': 'FLOAT'},
+        {'name': 'Vertical_Distance_To_Hydrology', 'type': 'FLOAT'},
+        {'name': 'Horizontal_Distance_To_Roadways', 'type': 'FLOAT'},
+        {'name': 'Hillshade_9am', 'type': 'FLOAT'},
+        {'name': 'Hillshade_Noon', 'type': 'FLOAT'},
+        {'name': 'Hillshade_3pm', 'type': 'FLOAT'},
+        {'name': 'Horizontal_Distance_To_Fire_Points', 'type': 'FLOAT'},
         {'name': 'Wilderness_Area', 'type': 'BYTES', 'domain': 'Wilderness_Area'},
-        {'name': 'Soil_Type', 'type': 'BYTES', 'domain': 'Soil_Type'}],
+        {'name': 'Soil_Type', 'type': 'BYTES', 'domain': 'Soil_Type'}, ],
     'stringDomain': [
         {'name': 'Soil_Type',
-        'value': ['C2702', 'C2703', 'C2704', 'C2705', 'C2706', 'C2717',
-                  'C3501', 'C3502', 'C4201', 'C4703', 'C4704', 'C4744',
-                  'C4758', 'C5101', 'C5151', 'C6101', 'C6102', 'C6731',
-                  'C7101', 'C7102', 'C7103', 'C7201', 'C7202', 'C7700',
-                  'C7701', 'C7702', 'C7709', 'C7710', 'C7745', 'C7746',
-                  'C7755', 'C7756', 'C7757', 'C7790', 'C8703', 'C8707',
-                  'C8708', 'C8771', 'C8772', 'C8776']},
+        'value': ['2702', '2703', '2704', '2705', '2706', '2717',
+                  '3501', '3502', '4201', '4703', '4704', '4744',
+                  '4758', '5101', '5151', '6101', '6102', '6731',
+                  '7101', '7102', '7103', '7201', '7202', '7700',
+                  '7701', '7702', '7709', '7710', '7745', '7746',
+                  '7755', '7756', '7757', '7790', '8703', '8707',
+                  '8708', '8771', '8772', '8776']},
       {'name': 'Wilderness_Area',
         'value': ['Cache', 'Commanche', 'Neota', 'Rawah']}]}
 
@@ -81,17 +81,18 @@ def coder():
     return InstanceCoder(schema=schema)
 
 def test_instancecoder_constructor():
+
     expected_result = {
-      'Elevation': np.int64, 
-      'Aspect': np.int64, 
-      'Slope': np.int64, 
-      'Horizontal_Distance_To_Hydrology': np.int64, 
-      'Vertical_Distance_To_Hydrology':np.int64,
-      'Horizontal_Distance_To_Roadways': np.int64, 
-      'Hillshade_9am': np.int64,
-      'Hillshade_Noon': np.int64, 
-      'Hillshade_3pm': np.int64, 
-      'Horizontal_Distance_To_Fire_Points': np.int64, 
+      'Elevation': np.float, 
+      'Aspect': np.float, 
+      'Slope': np.float, 
+      'Horizontal_Distance_To_Hydrology': np.float, 
+      'Vertical_Distance_To_Hydrology':np.float,
+      'Horizontal_Distance_To_Roadways': np.float, 
+      'Hillshade_9am': np.float,
+      'Hillshade_Noon': np.float, 
+      'Hillshade_3pm': np.float, 
+      'Horizontal_Distance_To_Fire_Points': np.float, 
       'Wilderness_Area': np.str,
       'Soil_Type': np.str}
 
