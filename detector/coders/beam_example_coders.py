@@ -99,6 +99,7 @@ class InstanceCoder(beam.DoFn):
         for raw_instance in raw_data[_INSTANCES_KEY]:
             instance = self._parse_raw_instance(raw_instance)
             if self._slicing_column:
+                timestamp = datetime.fromisoformat(log_record[_TIMESTAMP_KEY])
                 instance[self._slicing_column] = np.array(
-                    [self._get_time_slice(log_record[_TIMESTAMP_KEY])])
+                    [self._get_time_slice(timestamp)])
             yield instance

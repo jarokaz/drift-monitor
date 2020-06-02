@@ -42,7 +42,7 @@ def test_generate_drift_reports():
     end_time = datetime.datetime.fromisoformat('2020-05-25T22:50:30')
 
     time_window = None
-    time_window = datetime.timedelta(hours=30)
+    time_window = datetime.timedelta(hours=1)
 
     schema_path = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     schema = load_schema_text(schema_path)
