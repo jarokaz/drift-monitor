@@ -140,18 +140,18 @@ def generate_drift_reports(
         See https://cloud.google.com/dataflow/pipelines/specifying-exec-params for
         more details.
     """
-    
-    # Generate query 
+
+    # Generate query
     end_time = end_time.replace(second=0, microsecond=0)
     start_time = start_time.replace(second=0, microsecond=0)
+
+
     query = _generate_query(
         table_name=request_response_log_table, 
         model=model, 
         version=version, 
         start_time=start_time.isoformat(sep='T', timespec='seconds'), 
         end_time=end_time.isoformat(sep='T', timespec='seconds'))
-
-    print(query)
 
     # Configure slicing
     stats_options = tfdv.StatsOptions(schema=schema)
@@ -169,8 +169,6 @@ def generate_drift_reports(
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
     
-    logging.log(logging.INFO, "Starting a drift detector job. The output will be pushed to: {}".format(output_path))
-
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
                         | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
@@ -191,7 +189,7 @@ def generate_drift_reports(
                      statistics_pb2.DatasetFeatureStatisticsList)))
 
         _ = (stats
-             | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema)
+             | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema, previous_statistics=baseline_stats)
              | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
                  file_path_prefix=anomalies_output_path,
                  shard_name_template='',
