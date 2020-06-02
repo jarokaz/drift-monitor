@@ -59,8 +59,8 @@ def _validate_request_response_log_schema(request_response_log: str):
 
     query_template = """
        SELECT *
-       FROM 
-           `{{ source_table }}` 
+       FROM
+           `{{ source_table }}`
        LIMIT 1
        """
 
@@ -77,24 +77,33 @@ def _validate_request_response_log_schema(request_response_log: str):
             request_response_log))
 
 
-def _generate_query(table_name, start_time, end_time):
-    """Prepares a data sampling query."""
+def _generate_query(table_name, model, version, start_time, end_time):
+    """
+    Generates sampling query.
+    """
 
     sampling_query_template = """
-       SELECT *
-       FROM 
-           `{{ source_table }}` AS cover
-       WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
-       """
-
+        SELECT *
+        FROM 
+            `{{ source_table }}`
+        WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
+                AND model='{{ model }}' AND model_version='{{ version }}'
+        """
+    
     query = Template(sampling_query_template).render(
-        source_table=table_name, start_time=start_time, end_time=end_time)
+        source_table=table_name, 
+        model=model, 
+        version=version, 
+        start_time=start_time, 
+        end_time=end_time)
 
     return query
 
 
 def generate_drift_reports(
         request_response_log_table: str,
+        model: str,
+        version: str,
         start_time: str,
         end_time: str,
         output_path: str,
@@ -121,15 +130,20 @@ def generate_drift_reports(
         more details.
     """
 
-    sampling_query_template = """
+    query_template = """
        SELECT *
-       FROM 
-           `{{ source_table }}` AS cover
-       WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
-       """
-
+        FROM 
+            `{{ source_table }}`
+        WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
+              AND model='{{ model }}' AND model_version='{{ version }}'
+        """
+    
     query = Template(sampling_query_template).render(
-        source_table=request_response_log_table, start_time=start_time, end_time=end_time)
+        source_table=table_name, 
+        model=model, 
+        version=version, 
+        start_time=start_time, 
+        end_time=end_time)
 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)

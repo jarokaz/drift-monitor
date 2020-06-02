@@ -19,10 +19,12 @@
 request-response log into tfdv.types.BeamExample.
 """
 
+
 import json
 import apache_beam as beam
 import numpy as np
 
+from datetime import datetime, timedelta
 from typing import List, Optional, Text, Union, Dict, Iterable, Mapping
 from tensorflow_data_validation import types
 from tensorflow_data_validation import constants
@@ -30,46 +32,76 @@ from tensorflow_metadata.proto.v0 import schema_pb2
 
 _RAW_DATA_COLUMN = 'raw_data'
 _INSTANCES_KEY = 'instances'
+_TIMESTAMP_KEY = 'time'
+_TIME_SLICE_FEATURE = 'time_slice'
 
 _SCHEMA_TO_NUMPY = {
-  schema_pb2.FeatureType.BYTES:  np.str,
-  schema_pb2.FeatureType.INT: np.int64,
-  schema_pb2.FeatureType.FLOAT: np.float
+    schema_pb2.FeatureType.BYTES:  np.str,
+    schema_pb2.FeatureType.INT: np.int64,
+    schema_pb2.FeatureType.FLOAT: np.float
 }
-    
+
+
 @beam.typehints.with_input_types(Dict)
 @beam.typehints.with_output_types(types.BeamExample)
 class InstanceCoder(beam.DoFn):
-  """A DoFn which converts an AI Platform Prediction request body to
-  types.BeamExample elements."""
+    """A DoFn which converts an AI Platform Prediction request body to
+    types.BeamExample elements."""
 
-  def __init__(self, schema: schema_pb2):
+    def __init__(self, schema: schema_pb2, end_time: datetime = None, time_window: timedelta = None):
 
-    self._example_size = beam.metrics.Metrics.counter(
-      constants.METRICS_NAMESPACE, "example_size")
+        self._example_size = beam.metrics.Metrics.counter(
+            constants.METRICS_NAMESPACE, "example_size")
 
-    self._features = {}
-    for feature in schema.feature:
-      if not feature.type in _SCHEMA_TO_NUMPY.keys():
-        raise ValueError("Unsupported feature type: {}".format(feature.type))
-      self._features[feature.name] = _SCHEMA_TO_NUMPY[feature.type]
-    
+        self._features = {}
+        for feature in schema.feature:
+            if not feature.type in _SCHEMA_TO_NUMPY.keys():
+                raise ValueError(
+                    "Unsupported feature type: {}".format(feature.type))
+            self._features[feature.name] = _SCHEMA_TO_NUMPY[feature.type]
 
-  def process(self, log_record: Dict):
+        if end_time and time_window:
+            end_time = end_time.replace(second=0)
+            end_time = end_time.replace(microsecond=0)
+            self._end_time = end_time
 
-    raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
+            self._time_window = timedelta(
+                days=time_window.days,
+                seconds=(time_window.seconds // 60) * 60
+            )
+        else:
+            self._end_time = None
+            self._time_window = None
 
-    if type(raw_data[_INSTANCES_KEY][0]) is dict:
-      for instance in raw_data[_INSTANCES_KEY]:
-        for name, value in instance.items():
-          value = value if type(value) == list else [value]
-          instance[name] = np.array(value, dtype=self._features[name])
-        yield instance
-    elif type(raw_data[_INSTANCES_KEY][0]) is list:
-      for instance in raw_data[_INSTANCES_KEY]:
-        yield {name: np.array([value], dtype=self._features[name])
-          for name, value in zip(list(self._features.keys()), instance)}
-    else:
-      raise TypeError("Unsupported input instance format. Only JSON list or JSON object instances are supported")
-        
-  
+    def _get_time_slice(self, time_stamp: datetime):
+
+        q = (self._end_time - time_stamp) // self._time_window
+        slice_end = self._end_time - q * self._time_window
+        slice_begining = self._end_time - (q + 1) * self._time_window
+
+        return (slice_begining.isoformat(sep='T', timespec='minutes') + '_' +
+                slice_end.isoformat(sep='T', timespec='minutes'))
+
+    def _parse_raw_instance(self, raw_instance: Union[list, dict]):
+        if type(raw_instance) is dict:
+            instance = {name: np.array(value if type(value) == list else [value], dtype=self._features[name])
+                        for name, value in raw_instance.items()}
+        elif type(raw_instance) is list:
+            instance = {name: np.array([value], dtype=self._features[name])
+                        for name, value in zip(list(self._features.keys()), raw_instance)}
+        else:
+            raise TypeError(
+                "Unsupported input instance format. Only JSON list or JSON object instances are supported")
+
+        return instance
+
+    def process(self, log_record: Dict):
+
+        raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
+
+        for raw_instance in raw_data[_INSTANCES_KEY]:
+            instance = self._parse_raw_instance(raw_instance)
+            if self._time_window:
+                instance[_TIME_SLICE_FEATURE] = np.array(
+                    [self._get_time_slice(log_record[_TIMESTAMP_KEY])])
+            yield instance
