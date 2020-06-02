@@ -35,6 +35,7 @@ from jinja2 import Template
 
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
+from tensorflow_metadata.proto.v0 import anomalies_pb2
 
 from coders.beam_example_coders import InstanceCoder
 
@@ -111,7 +112,7 @@ def generate_drift_reports(
         baseline_stats: Optional[statistics_pb2.DatasetFeatureStatisticsList]=None,
         time_window: Optional[timedelta]=None,
         pipeline_options: Optional[PipelineOptions] = None,
-):
+) -> anomalies_pb2.Anomalies:
     """Computes statistics and anomaly reports for a time series of records 
     in AI Platform Prediction request-response log.
 
@@ -144,8 +145,6 @@ def generate_drift_reports(
     # Generate query
     end_time = end_time.replace(second=0, microsecond=0)
     start_time = start_time.replace(second=0, microsecond=0)
-
-
     query = _generate_query(
         table_name=request_response_log_table, 
         model=model, 
@@ -168,29 +167,35 @@ def generate_drift_reports(
 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
-    
+
+    logging.log(logging.INFO, "Starting the drift detector pipeline...")
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
-                        | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
+           | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
 
         examples = (raw_examples
-                    | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema, end_time, time_window, slicing_column)))
+           | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema, end_time, time_window, slicing_column)))
 
         stats = (examples
-                 | 'BeamExamplesToArrow' >> tfdv.utils.batch_util.BatchExamplesToArrowRecordBatches()
-                 | 'GenerateStatistics' >> tfdv.GenerateStatistics(options=stats_options)
-                 )
+           | 'BeamExamplesToArrow' >> tfdv.utils.batch_util.BatchExamplesToArrowRecordBatches()
+           | 'GenerateStatistics' >> tfdv.GenerateStatistics(options=stats_options))
 
         _ = (stats
-             | 'WriteStatsOutput' >> beam.io.WriteToTFRecord(
-                 file_path_prefix=stats_output_path,
-                 shard_name_template='',
-                 coder=beam.coders.ProtoCoder(
-                     statistics_pb2.DatasetFeatureStatisticsList)))
+            | 'WriteStatsOutput' >> beam.io.WriteToTFRecord(
+                file_path_prefix=stats_output_path,
+                shard_name_template='',
+                coder=beam.coders.ProtoCoder(
+                    statistics_pb2.DatasetFeatureStatisticsList)))
 
-        _ = (stats
-             | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema, previous_statistics=baseline_stats)
-             | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
-                 file_path_prefix=anomalies_output_path,
-                 shard_name_template='',
-                 append_trailing_newlines=False))
+        anomalies = (stats
+            | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema, previous_statistics=baseline_stats))
+
+        _ = (anomalies
+            | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
+                file_path_prefix=anomalies_output_path,
+                shard_name_template='',
+                append_trailing_newlines=False))
+
+    logging.log(logging.INFO, "The drift detector pipeline completed.")
+
+    return tfdv.load_anomalies_text(anomalies_output_path) 

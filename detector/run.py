@@ -110,7 +110,7 @@ if __name__ == '__main__':
     end_time = datetime.datetime.fromisoformat(known_args.end_time) 
 
     if start_time >= end_time:
-        raise ValueError("The end_time cannot be earlier than start_time")
+        raise ValueError("The end_time cannot be earlier than the start_time")
 
     time_window=None
     if known_args.time_window:
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     pipeline_options = PipelineOptions(pipeline_args)
 
-    _ = generate_drift_reports(
+    anomalies = generate_drift_reports(
         request_response_log_table=known_args.request_response_log_table,
         model=known_args.model,
         version=known_args.version,
@@ -134,3 +134,5 @@ if __name__ == '__main__':
         baseline_stats=baseline_stats,
         time_window=time_window,
         pipeline_options=pipeline_options)
+
+    print(anomalies)
