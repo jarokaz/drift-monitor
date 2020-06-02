@@ -33,7 +33,6 @@ from tensorflow_metadata.proto.v0 import schema_pb2
 _RAW_DATA_COLUMN = 'raw_data'
 _INSTANCES_KEY = 'instances'
 _TIMESTAMP_KEY = 'time'
-_TIME_SLICE_FEATURE = 'time_slice'
 
 _SCHEMA_TO_NUMPY = {
     schema_pb2.FeatureType.BYTES:  np.str,
@@ -48,7 +47,11 @@ class InstanceCoder(beam.DoFn):
     """A DoFn which converts an AI Platform Prediction request body to
     types.BeamExample elements."""
 
-    def __init__(self, schema: schema_pb2, end_time: datetime = None, time_window: timedelta = None):
+    def __init__(self, 
+        schema: schema_pb2, 
+        end_time: datetime=None, 
+        time_window: datetime=None,
+        slicing_column: str=None):
 
         self._example_size = beam.metrics.Metrics.counter(
             constants.METRICS_NAMESPACE, "example_size")
@@ -60,20 +63,14 @@ class InstanceCoder(beam.DoFn):
                     "Unsupported feature type: {}".format(feature.type))
             self._features[feature.name] = _SCHEMA_TO_NUMPY[feature.type]
 
-        if end_time and time_window:
-            end_time = end_time.replace(second=0)
-            end_time = end_time.replace(microsecond=0)
+        if end_time and time_window and slicing_column:
             self._end_time = end_time
-
-            self._time_window = timedelta(
-                days=time_window.days,
-                seconds=(time_window.seconds // 60) * 60
-            )
+            self._time_window = time_window
+            self._slicing_column = slicing_column 
         else:
-            self._end_time = None
-            self._time_window = None
+            self._slicing_column = None
 
-    def _get_time_slice(self, time_stamp: datetime):
+    def _get_time_slice(self, time_stamp: datetime) -> str:
 
         q = (self._end_time - time_stamp) // self._time_window
         slice_end = self._end_time - q * self._time_window
@@ -82,7 +79,7 @@ class InstanceCoder(beam.DoFn):
         return (slice_begining.isoformat(sep='T', timespec='minutes') + '_' +
                 slice_end.isoformat(sep='T', timespec='minutes'))
 
-    def _parse_raw_instance(self, raw_instance: Union[list, dict]):
+    def _parse_raw_instance(self, raw_instance: Union[list, dict]) -> dict:
         if type(raw_instance) is dict:
             instance = {name: np.array(value if type(value) == list else [value], dtype=self._features[name])
                         for name, value in raw_instance.items()}
@@ -95,13 +92,13 @@ class InstanceCoder(beam.DoFn):
 
         return instance
 
-    def process(self, log_record: Dict):
+    def process(self, log_record: Dict) -> Iterable:
 
         raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
 
         for raw_instance in raw_data[_INSTANCES_KEY]:
             instance = self._parse_raw_instance(raw_instance)
-            if self._time_window:
-                instance[_TIME_SLICE_FEATURE] = np.array(
+            if self._slicing_column:
+                instance[self._slicing_column] = np.array(
                     [self._get_time_slice(log_record[_TIMESTAMP_KEY])])
             yield instance

@@ -16,6 +16,7 @@
 #
 
 import base64
+import logging
 import datetime
 import json
 import mock
@@ -30,12 +31,18 @@ from utils.drift_reports import generate_drift_reports, _validate_request_respon
 
 def test_generate_drift_reports():
 
-    request_response_log_table = 'data_validation.covertype_logs_tf'
+    request_response_log_table = 'data_validation.test1'
     project_id = 'mlops-dev-env'
+    model = 'covertype_tf'
+    version = 'v3'
+
     baseline_stats = None
     output_path = 'gs://mlops-dev-workspace/drift_monitor/output/tf/test'
-    start_time = '2020-05-25T16:00:00'
-    end_time = '2020-05-25T22:00:00'
+    start_time = datetime.datetime.fromisoformat('2020-05-25T16:01:10')
+    end_time = datetime.datetime.fromisoformat('2020-05-25T22:50:30')
+
+    time_window = None
+    time_window = datetime.timedelta(hours=30)
 
     schema_path = 'gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt'
     schema = load_schema_text(schema_path)
@@ -44,10 +51,15 @@ def test_generate_drift_reports():
     google_cloud_options = pipeline_options.view_as(GoogleCloudOptions)
     google_cloud_options.project = project_id
 
+    logging.getLogger().setLevel(logging.INFO)
+
     generate_drift_reports(
         request_response_log_table=request_response_log_table,
+        model=model,
+        version=version,
         start_time=start_time,
         end_time=end_time,
+        time_window=time_window,
         output_path=output_path,
         schema=schema, 
         baseline_stats=baseline_stats,

@@ -18,21 +18,20 @@
 in AI Platform Prediction request-response log.
 """
 
-import datetime
 import os
 import logging
 from enum import Enum
 from typing import List, Optional, Text, Union, Dict, Iterable
 
 import apache_beam as beam
+import tensorflow_data_validation as tfdv
 
 from apache_beam.options.pipeline_options import PipelineOptions
+from datetime import datetime
+from datetime import timedelta
 from google.cloud import bigquery
 from jinja2 import Template
 
-from tensorflow_data_validation import GenerateStatistics
-from tensorflow_data_validation import validate_statistics
-from tensorflow_data_validation import utils
 
 from tensorflow_metadata.proto.v0 import statistics_pb2
 from tensorflow_metadata.proto.v0 import schema_pb2
@@ -42,6 +41,7 @@ from coders.beam_example_coders import InstanceCoder
 
 _STATS_FILENAME = 'stats.pb'
 _ANOMALIES_FILENAME = 'anomalies.pbtxt'
+_SLICING_COLUMN = 'time_slice'
 
 _LOGGING_TABLE_SCHEMA = {
     'model': 'STRING',
@@ -77,9 +77,9 @@ def _validate_request_response_log_schema(request_response_log: str):
             request_response_log))
 
 
-def _generate_query(table_name, model, version, start_time, end_time):
+def _generate_query(table_name: str, model: str, version: str, start_time: str, end_time: str) -> str:
     """
-    Generates sampling query.
+    Generates a query that extracts data from the request-response log.
     """
 
     sampling_query_template = """
@@ -104,60 +104,83 @@ def generate_drift_reports(
         request_response_log_table: str,
         model: str,
         version: str,
-        start_time: str,
-        end_time: str,
+        start_time: datetime,
+        end_time: datetime,
         output_path: str,
         schema: schema_pb2.Schema,
-        baseline_stats: statistics_pb2.DatasetFeatureStatisticsList,
+        baseline_stats: Optional[statistics_pb2.DatasetFeatureStatisticsList]=None,
+        time_window: Optional[timedelta]=None,
         pipeline_options: Optional[PipelineOptions] = None,
 ):
-    """Computes statistics and anomalies for a time window in AI Platform Prediction
-    request-response log.
+    """Computes statistics and anomaly reports for a time series of records 
+    in AI Platform Prediction request-response log.
+
+    The function starts an Apache Beam job that calculates results for the full
+    time series of records and (optionally) for a set of time slices within
+    the time series. The output of the job is a statistics_pb2.DatasetFeatureStatisticsList
+    protobuf with descriptive statistis and a couple of anomalies_pb2.Anomalies protobufs
+    with anomaly reports. The results are stored in the provided GCS location 
 
     Args:
       request_response_log_table: A full name of a BigQuery table
         with the request_response_log
-      start_time: The beginning of a time window in the ISO time format.
-      end_time: The end of a time window in the ISO time format.
+      start_time: The start of the time series. The value will be rounded to minutes.
+      end_time: The end of the time series. The value will be rounded to minutes. 
       output_path: The GCS location to output the statistics and anomalies
         proto buffers to. The file names will be `stats.pb` and `anomalies.pbtxt`. 
       schema: A Schema protobuf describing the expected schema.
-      baseline_stats: Baseline statistics to compare against.
+      baseline_stats: If provided,  the baseline statistics will be used to detect
+        distribution skews.        
+      time_window: If provided the  time series of records will be divided into 
+        a set of consecutive time slices of the time_window width and the stats 
+        will be calculated for each slice. 
       pipeline_options: Optional beam pipeline options. This allows users to
         specify various beam pipeline execution parameters like pipeline runner
         (DirectRunner or DataflowRunner), cloud dataflow service project id, etc.
         See https://cloud.google.com/dataflow/pipelines/specifying-exec-params for
         more details.
     """
-
-    query_template = """
-       SELECT *
-        FROM 
-            `{{ source_table }}`
-        WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'
-              AND model='{{ model }}' AND model_version='{{ version }}'
-        """
     
-    query = Template(sampling_query_template).render(
-        source_table=table_name, 
+    # Generate query 
+    end_time = end_time.replace(second=0, microsecond=0)
+    start_time = start_time.replace(second=0, microsecond=0)
+    query = _generate_query(
+        table_name=request_response_log_table, 
         model=model, 
         version=version, 
-        start_time=start_time, 
-        end_time=end_time)
+        start_time=start_time.isoformat(sep='T', timespec='seconds'), 
+        end_time=end_time.isoformat(sep='T', timespec='seconds'))
+
+    print(query)
+
+    # Configure slicing
+    stats_options = tfdv.StatsOptions(schema=schema)
+    slicing_column = None
+    if time_window:
+        time_window = timedelta(
+            days=time_window.days,
+            seconds=(time_window.seconds // 60) * 60)
+
+        if end_time - start_time > time_window:
+            slice_fn = tfdv.get_feature_value_slicer(features={_SLICING_COLUMN: None})
+            stats_options.slice_functions=[slice_fn]
+            slicing_column = _SLICING_COLUMN 
 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
+    
+    logging.log(logging.INFO, "Starting a drift detector job. The output will be pushed to: {}".format(output_path))
 
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
                         | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
 
         examples = (raw_examples
-                    | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema)))
+                    | 'InstancesToBeamExamples' >> beam.ParDo(InstanceCoder(schema, end_time, time_window, slicing_column)))
 
         stats = (examples
-                 | 'BeamExamplesToArrow' >> utils.batch_util.BatchExamplesToArrowRecordBatches()
-                 | 'GenerateStatistics' >> GenerateStatistics()
+                 | 'BeamExamplesToArrow' >> tfdv.utils.batch_util.BatchExamplesToArrowRecordBatches()
+                 | 'GenerateStatistics' >> tfdv.GenerateStatistics(options=stats_options)
                  )
 
         _ = (stats
@@ -168,7 +191,7 @@ def generate_drift_reports(
                      statistics_pb2.DatasetFeatureStatisticsList)))
 
         _ = (stats
-             | 'ValidateStatistics' >> beam.Map(validate_statistics, schema=schema)
+             | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema)
              | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
                  file_path_prefix=anomalies_output_path,
                  shard_name_template='',
