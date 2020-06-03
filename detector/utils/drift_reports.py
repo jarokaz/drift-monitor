@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""A utility function to generate data drift reports for a time window
-in AI Platform Prediction request-response log.
+"""A utility function to generate statistics and anomaly reports for a time
+series of records in an AI Platform Prediction request-response log.
 """
 
 import os
@@ -42,7 +42,8 @@ from coders.beam_example_coders import InstanceCoder
 
 _STATS_FILENAME = 'stats.pb'
 _ANOMALIES_FILENAME = 'anomalies.pbtxt'
-_SLICING_COLUMN = 'time_slice'
+_SLICING_COLUMN_NAME = 'time_slice'
+_SLICING_COLUMN_TYPE = schema_pb2.FeatureType.BYTES
 
 _LOGGING_TABLE_SCHEMA = {
     'model': 'STRING',
@@ -55,8 +56,10 @@ _LOGGING_TABLE_SCHEMA = {
 
 
 def _validate_request_response_log_schema(request_response_log: str):
-    """Validates that a provided request response log table
-    conforms to schema."""
+    """
+    Validates that a provided request response log table
+    conforms to schema.
+    """
 
     query_template = """
        SELECT *
@@ -80,7 +83,8 @@ def _validate_request_response_log_schema(request_response_log: str):
 
 def _generate_query(table_name: str, model: str, version: str, start_time: str, end_time: str) -> str:
     """
-    Generates a query that extracts data from the request-response log.
+    Generates a query that extracts a time series of records from an AI Platform Prediction
+    request-response log.
     """
 
     sampling_query_template = """
@@ -113,13 +117,14 @@ def generate_drift_reports(
         time_window: Optional[timedelta]=None,
         pipeline_options: Optional[PipelineOptions] = None,
 ) -> anomalies_pb2.Anomalies:
-    """Computes statistics and anomaly reports for a time series of records 
-    in AI Platform Prediction request-response log.
+    """
+    Computes statistics and anomaly reports for a time series of records 
+    in an AI Platform Prediction request-response log.
 
     The function starts an Apache Beam job that calculates results for the full
     time series of records and (optionally) for a set of time slices within
     the time series. The output of the job is a statistics_pb2.DatasetFeatureStatisticsList
-    protobuf with descriptive statistis and a couple of anomalies_pb2.Anomalies protobufs
+    protobuf with descriptive statistis and an anomalies_pb2.Anomalies protobuf
     with anomaly reports. The results are stored in the provided GCS location 
 
     Args:
@@ -127,11 +132,11 @@ def generate_drift_reports(
         with the request_response_log
       start_time: The start of the time series. The value will be rounded to minutes.
       end_time: The end of the time series. The value will be rounded to minutes. 
-      output_path: The GCS location to output the statistics and anomalies
+      output_path: The GCS location to output the statistics and anomaly
         proto buffers to. The file names will be `stats.pb` and `anomalies.pbtxt`. 
       schema: A Schema protobuf describing the expected schema.
-      baseline_stats: If provided,  the baseline statistics will be used to detect
-        distribution skews.        
+      baseline_stats: If provided, the baseline statistics will be used to detect
+        distribution anomalies.        
       time_window: If provided the  time series of records will be divided into 
         a set of consecutive time slices of the time_window width and the stats 
         will be calculated for each slice. 
@@ -142,7 +147,8 @@ def generate_drift_reports(
         more details.
     """
 
-    # Generate query
+
+    # Generate BigQuery query
     end_time = end_time.replace(second=0, microsecond=0)
     start_time = start_time.replace(second=0, microsecond=0)
     query = _generate_query(
@@ -161,14 +167,17 @@ def generate_drift_reports(
             seconds=(time_window.seconds // 60) * 60)
 
         if end_time - start_time > time_window:
-            slice_fn = tfdv.get_feature_value_slicer(features={_SLICING_COLUMN: None})
+            slice_fn = tfdv.get_feature_value_slicer(features={_SLICING_COLUMN_NAME: None})
             stats_options.slice_functions=[slice_fn]
-            slicing_column = _SLICING_COLUMN 
+            slicing_column = _SLICING_COLUMN_NAME 
+            slicing_feature = schema.feature.add()
+            slicing_feature.name = _SLICING_COLUMN_NAME
+            slicing_feature.type = _SLICING_COLUMN_TYPE
 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
 
-    logging.log(logging.INFO, "Starting the drift detector pipeline...")
+    logging.log(logging.INFO, "Starting the request-response log analysis pipeline...")
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
            | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
@@ -196,6 +205,6 @@ def generate_drift_reports(
                 shard_name_template='',
                 append_trailing_newlines=False))
 
-    logging.log(logging.INFO, "The drift detector pipeline completed.")
+    logging.log(logging.INFO, "The request-response log analysis pipeline completed.")
 
     return tfdv.load_anomalies_text(anomalies_output_path) 

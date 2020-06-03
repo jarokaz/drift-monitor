@@ -15,11 +15,8 @@
 # limitations under the License.
 #
 
-"""Runs a data drift job."""
-
-# pytype: skip-file
-
-from __future__ import absolute_import
+"""A command life interface to start a job to analyze a time series of records
+from the AI Platform Prediction request-response log."""
 
 import argparse
 import datetime
@@ -99,10 +96,10 @@ if __name__ == '__main__':
         required=False)
 
     known_args, pipeline_args = parser.parse_known_args()
+
+    baseline_stats = None
     if known_args.baseline_stats_file:
         baseline_stats = load_statistics(known_args.baseline_stats_file)
-    else:
-        baseline_stats = None
 
     schema = load_schema_text(known_args.schema_file)
 
@@ -115,7 +112,7 @@ if __name__ == '__main__':
     time_window=None
     if known_args.time_window:
         if not re.fullmatch('[0-9]+[hm]', known_args.time_window):
-            raise ValueError("Incorrect format of time_window")
+            raise ValueError("Incorrect format for time_window")
         if known_args.time_window[-1]=='h': 
             time_window = datetime.timedelta(hours=int(known_args.time_window[0:-1]))
         else:
@@ -135,4 +132,5 @@ if __name__ == '__main__':
         time_window=time_window,
         pipeline_options=pipeline_options)
 
-    print(anomalies)
+    
+    print(anomalies.anomaly_info)

@@ -5,6 +5,7 @@ python ../run.py \
 --version=v3 \
 --start_time=2020-05-25T16:01:10 \
 --end_time=2020-05-25T22:50:30 \
---output_path=gs://mlops-dev-workspace/drift_monitor/output/tf/test \
---schema_file=gs://mlops-dev-workspace/drift_monitor/schema/schema.pbtxt \
+--output_path=gs://mlops-dev-workspace/drift-monitor/output/test \
+--schema_file=gs://mlops-dev-workspace/drift-monitor/schema/schema.pbtxt \
+--baseline_stats_file=gs://mlops-dev-workspace/drift-monitor/baseline_stats/stats.pbtxt \
 --time_window=60m
