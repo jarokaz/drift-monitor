@@ -51,20 +51,12 @@
       ]
     },
     {
-      "name": "setup_file",
-      "label": "Setup file.",
-      "helpText": "Setup file.",
-      "regexes": [
-        "[-_./a-zA-Z0-9]+"
-      ]
-    },
-    {
-      "name": "schema_file",
-      "label": "Schema file.",
-      "helpText": "A GCS path to schema file.",
-      "regexes": [
-        "gs://[-_./a-zA-Z0-9]+"
-      ]
+        "name": "schema_file",
+        "label": "Schema file.",
+        "helpText": "A GCS path to schema file.",
+        "regexes": [
+          "gs://[-_./a-zA-Z0-9]+"
+        ]
     },
     {
       "name": "baseline_stats_file",
@@ -82,6 +74,14 @@
         "is_optional": true,
         "regexes": [
           "[0-9]+[hm]"
+        ]
+    },
+    {
+        "name": "setup_file",
+        "label": "Setup file.",
+        "helpText": "Setup file.",
+        "regexes": [
+          "[-_./a-zA-Z0-9]+"
         ]
     }
   ]

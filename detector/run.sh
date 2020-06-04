@@ -1,4 +1,8 @@
-python ../run.py \
+#--runner=dataflow \
+#--staging_location=gs://mlops-dev-workspace/beam \
+#--temp_location=gs://mlops-dev-workspace/beam \
+#--setup_file=./setup.py \
+python run.py \
 --project=mlops-dev-env \
 --request_response_log_table=data_validation.test1 \
 --model=covertype_tf \

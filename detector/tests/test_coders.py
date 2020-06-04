@@ -79,20 +79,23 @@ def coder():
     schema = schema_pb2.Schema()
     ParseDict(schema_dict, schema)
 
-    end_time = datetime.datetime.fromisoformat('2020-05-17 10:30:00')
+    end_time = datetime.datetime.fromisoformat('2020-05-17T10:30:00')
     time_window = datetime.timedelta(minutes=30)
+    slicing_column = 'time_slice'
     
-    return InstanceCoder(schema=schema, end_time=end_time, time_window=time_window)
-    #return InstanceCoder(schema=schema)
+    return InstanceCoder(schema=schema, 
+                         end_time=end_time, 
+                         time_window=time_window,
+                         slicing_column=slicing_column)
 
 def test_get_time_slice(coder):
 
-    time_stamp = datetime.datetime.fromisoformat("2020-02-17 09:00:01")
+    time_stamp = '2020-02-17T09:00:01'
     time_slice = coder._get_time_slice(time_stamp)
+    expected_result = '2020-02-17T09:00_2020-02-17T09:30' 
 
     print(time_slice)
-
-
+    assert time_slice == expected_result
 
 
 def test_instancecoder_constructor():
@@ -110,10 +113,16 @@ def test_instancecoder_constructor():
       'Horizontal_Distance_To_Fire_Points': np.float, 
       'Wilderness_Area': np.str,
       'Soil_Type': np.str}
-
+    
+    end_time =  datetime.datetime.fromisoformat('2020-05-17T10:30:00')
+    time_window = datetime.timedelta(minutes=30)
+    slicing_column='time_slice'
     schema = schema_pb2.Schema()
     ParseDict(schema_dict, schema)
-    coder = InstanceCoder(schema=schema)
+    coder = InstanceCoder(schema=schema, 
+                          end_time=end_time,
+                          time_window=time_window,
+                          slicing_column=slicing_column)
     assert coder._features == expected_result
 
 

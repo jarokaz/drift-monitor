@@ -43,11 +43,11 @@ echo INFO: Setting the project to: $_PROJECT_ID
 gcloud config set project $_PROJECT_ID
 
 # Build drift-detector image
-export TEMPLATE_IMAGE="gcr.io/$_PROJECT_ID/drift-detector:latest"
+export TEMPLATE_IMAGE="gcr.io/$_PROJECT_ID/rr-log-analyzer:latest"
 gcloud builds submit --tag "$TEMPLATE_IMAGE" .
 
 # Deploy the template
-export TEMPLATE_PATH="$_TEMPLATE_LOCATION/drift_detector.json"
+export TEMPLATE_PATH="$_TEMPLATE_LOCATION/rr-log-analyzer.json"
 gcloud beta dataflow flex-template build $TEMPLATE_PATH \
   --image "$TEMPLATE_IMAGE" \
   --sdk-language "PYTHON" \

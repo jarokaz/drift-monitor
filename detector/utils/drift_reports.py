@@ -88,7 +88,7 @@ def _generate_query(table_name: str, model: str, version: str, start_time: str, 
     """
 
     sampling_query_template = """
-        SELECT FORMAT_TIMESTAMP("%G-%m-%d %T", time) as time, raw_data
+        SELECT FORMAT_TIMESTAMP("%G-%m-%dT%T", time) as time, raw_data
         FROM 
             `{{ source_table }}`
         WHERE time BETWEEN '{{ start_time }}' AND '{{ end_time }}'

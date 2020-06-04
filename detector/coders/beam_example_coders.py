@@ -70,14 +70,25 @@ class InstanceCoder(beam.DoFn):
         else:
             self._slicing_column = None
 
-    def _get_time_slice(self, time_stamp: datetime) -> str:
+    def _get_time_slice(self, time_stamp: str) -> str:
+        """
+        Assigns a time stamp to a time slice.
+
+        Args:
+            time_stamp: A date_time string in the ISO YYYY-MM-DDTHH:MM:SS format
+        Returns:
+            A time slice as a string in the following format:
+            YYYY-MM-DDTHH:MM_YYYY-MM-DDTHH:MM
+        """
+
+        time_stamp = datetime.strptime(time_stamp, '%Y-%m-%dT%H:%M:%S')
 
         q = (self._end_time - time_stamp) // self._time_window
         slice_end = self._end_time - q * self._time_window
         slice_begining = self._end_time - (q + 1) * self._time_window
 
-        return (slice_begining.isoformat(sep='T', timespec='minutes') + '_' +
-                slice_end.isoformat(sep='T', timespec='minutes'))
+        return (slice_begining.strftime('%Y-%m-%dT%H:%M') + '_' +
+                slice_end.strftime('%Y-%m-%dT%H:%M'))
 
     def _parse_raw_instance(self, raw_instance: Union[list, dict]) -> dict:
         if type(raw_instance) is dict:
@@ -96,10 +107,13 @@ class InstanceCoder(beam.DoFn):
 
         raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
 
+        print(log_record)
+
+        raise ValueError("stop")
+
         for raw_instance in raw_data[_INSTANCES_KEY]:
             instance = self._parse_raw_instance(raw_instance)
             if self._slicing_column:
-                timestamp = datetime.fromisoformat(log_record[_TIMESTAMP_KEY])
                 instance[self._slicing_column] = np.array(
-                    [self._get_time_slice(timestamp)])
+                    [self._get_time_slice(log_record[_TIMESTAMP_KEY])])
             yield instance
