@@ -53,7 +53,7 @@ def test_generate_drift_reports():
 
     logging.getLogger().setLevel(logging.INFO)
 
-    response = generate_drift_reports(
+    generate_drift_reports(
         request_response_log_table=request_response_log_table,
         model=model,
         version=version,
@@ -65,7 +65,6 @@ def test_generate_drift_reports():
         baseline_stats=baseline_stats,
         pipeline_options=pipeline_options)
 
-    print(response)
 
 def test_validate_request_response_log_schema():
 

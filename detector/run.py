@@ -142,7 +142,7 @@ if __name__ == '__main__':
         time_window=time_window,
         pipeline_options=pipeline_options)
 
-    if list(anomalies.anomaly_info):
-        logging.log(logging.WARNING, "Data anomalies detected. Check the anomalies report in: {}".format(known_args.output_path))
-    else:
-        logging.log(logging.INFO, "No anomalies detected.")
+    #if list(anomalies.anomaly_info):
+    #    logging.log(logging.WARNING, "Data anomalies detected. Check the anomalies report in: {}".format(known_args.output_path))
+    #else:
+    #   logging.log(logging.INFO, "No anomalies detected.")

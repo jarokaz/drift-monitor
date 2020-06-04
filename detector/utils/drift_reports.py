@@ -104,6 +104,22 @@ def _generate_query(table_name: str, model: str, version: str, start_time: str, 
 
     return query
 
+def _alert_if_anomalies(anomalies: anomalies_pb2.Anomalies, output_path: str):
+    """
+    Analyzes an anomaly protobuf and reports the status.
+
+    Currently, the function just writes to a default Python logger.
+
+    A more comprehensive alerting strategy will be considered in the future.
+    """
+
+    if list(anomalies.anomaly_info):
+        logging.log(logging.WARNING, "Anomalies detected. The anomaly report uploaded to: {}".format(output_path))
+    else:
+        logging.log(logging.INFO, "No anomalies detected.")
+    
+    return anomalies
+
 
 def generate_drift_reports(
         request_response_log_table: str,
@@ -177,7 +193,6 @@ def generate_drift_reports(
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
 
-    logging.log(logging.INFO, "Starting the request-response log analysis pipeline...")
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
            | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))
@@ -200,11 +215,9 @@ def generate_drift_reports(
             | 'ValidateStatistics' >> beam.Map(tfdv.validate_statistics, schema=schema, previous_statistics=baseline_stats))
 
         _ = (anomalies
+            | 'AlertIfAnomalies' >> beam.Map(_alert_if_anomalies, anomalies_output_path)
             | 'WriteAnomaliesOutput' >> beam.io.textio.WriteToText(
                 file_path_prefix=anomalies_output_path,
                 shard_name_template='',
                 append_trailing_newlines=False))
 
-    logging.log(logging.INFO, "The request-response log analysis pipeline completed.")
-
-    return tfdv.load_anomalies_text(anomalies_output_path) 

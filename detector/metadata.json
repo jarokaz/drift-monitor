@@ -75,14 +75,6 @@
         "regexes": [
           "[0-9]+[hm]"
         ]
-    },
-    {
-        "name": "setup_file",
-        "label": "Setup file.",
-        "helpText": "Setup file.",
-        "regexes": [
-          "[-_./a-zA-Z0-9]+"
-        ]
     }
   ]
 }
