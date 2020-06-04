@@ -128,9 +128,10 @@ if __name__ == '__main__':
             time_window = datetime.timedelta(minutes=int(known_args.time_window[0:-1]))
 
     pipeline_options = PipelineOptions(pipeline_args)
-    pipeline_options.view_as(SetupOptions).setup_file = _SETUP_FILE
+    #pipeline_options.view_as(SetupOptions).setup_file = _SETUP_FILE
 
-    anomalies = generate_drift_reports(
+    logging.log(logging.INFO, "Starting the request-response log analysis pipeline...")
+    generate_drift_reports(
         request_response_log_table=known_args.request_response_log_table,
         model=known_args.model,
         version=known_args.version,
@@ -142,7 +143,3 @@ if __name__ == '__main__':
         time_window=time_window,
         pipeline_options=pipeline_options)
 
-    #if list(anomalies.anomaly_info):
-    #    logging.log(logging.WARNING, "Data anomalies detected. Check the anomalies report in: {}".format(known_args.output_path))
-    #else:
-    #   logging.log(logging.INFO, "No anomalies detected.")

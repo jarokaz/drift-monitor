@@ -1,5 +1,6 @@
-python ./run.py \
+python run.py \
 --runner DataflowRunner \
+--setup_file ./setup.py \
 --temp_location gs://mlops-dev-workspace/beam \
 --staging_location gs://mlops-dev-workspace/beam \
 --region us-central1 \
@@ -7,8 +8,8 @@ python ./run.py \
 --request_response_log_table=data_validation.covertype_classifier_logs_tf \
 --model=covertype_tf \
 --version=v3 \
---start_time=2020-05-25T16:01:10 \
---end_time=2020-05-25T22:50:30 \
+--start_time=2020-06-03T16:01:10 \
+--end_time=2020-06-03T22:50:30 \
 --output_path=gs://mlops-dev-workspace/drift-monitor/output/test \
 --schema_file=gs://mlops-dev-workspace/drift-monitor/schema/schema.pbtxt \
 --baseline_stats_file=gs://mlops-dev-workspace/drift-monitor/baseline_stats/stats.pbtxt \
