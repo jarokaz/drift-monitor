@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-"""A command life interface to start a job to analyze a time series of records
+"""A command life interface to start a Beam pipeline to analyze a time series of records
 from the AI Platform Prediction request-response log."""
 
 import argparse
@@ -34,7 +34,7 @@ from tensorflow_data_validation import StatsOptions
 from tensorflow_data_validation import load_statistics
 from tensorflow_data_validation import load_schema_text
 
-from utils.drift_reports import generate_drift_reports
+from log_analyzer.log_analyzer import analyze_log_records
 
 
 _SETUP_FILE = './setup.py'
@@ -100,12 +100,6 @@ if __name__ == '__main__':
 
     known_args, pipeline_args = parser.parse_known_args()
 
-    baseline_stats = None
-    if known_args.baseline_stats_file:
-        baseline_stats = load_statistics(known_args.baseline_stats_file)
-
-    schema = load_schema_text(known_args.schema_file)
-
     start_time = datetime.datetime.strptime(known_args.start_time, '%Y-%m-%dT%H:%M:%S')
     end_time = datetime.datetime.strptime(known_args.end_time, '%Y-%m-%dT%H:%M:%S') 
 
@@ -127,11 +121,17 @@ if __name__ == '__main__':
         else:
             time_window = datetime.timedelta(minutes=int(known_args.time_window[0:-1]))
 
+    baseline_stats = None
+    if known_args.baseline_stats_file:
+        baseline_stats = load_statistics(known_args.baseline_stats_file)
+
+    schema = load_schema_text(known_args.schema_file)
+
     pipeline_options = PipelineOptions(pipeline_args)
-    #pipeline_options.view_as(SetupOptions).setup_file = _SETUP_FILE
+    pipeline_options.view_as(SetupOptions).setup_file = _SETUP_FILE
 
     logging.log(logging.INFO, "Starting the request-response log analysis pipeline...")
-    generate_drift_reports(
+    analyze_log_records(
         request_response_log_table=known_args.request_response_log_table,
         model=known_args.model,
         version=known_args.version,

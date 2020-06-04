@@ -1,11 +1,10 @@
 python run.py \
 --runner DataflowRunner \
---setup_file ./setup.py \
 --temp_location gs://mlops-dev-workspace/beam \
 --staging_location gs://mlops-dev-workspace/beam \
 --region us-central1 \
 --project=mlops-dev-env \
---request_response_log_table=data_validation.covertype_classifier_logs_tf \
+--request_response_log_table=data_validation.covertype_logs_tf \
 --model=covertype_tf \
 --version=v3 \
 --start_time=2020-06-03T16:01:10 \

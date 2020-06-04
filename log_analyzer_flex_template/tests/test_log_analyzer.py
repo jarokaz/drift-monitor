@@ -26,10 +26,10 @@ import tensorflow as tf
 
 from tensorflow_data_validation import load_schema_text
 from apache_beam.options.pipeline_options import PipelineOptions, GoogleCloudOptions
-from utils.drift_reports import generate_drift_reports, _validate_request_response_log_schema
+from log_analyzer import analyze_log_records, _validate_request_response_log_schema
 
 
-def test_generate_drift_reports():
+def test_analyze_log_records():
 
     request_response_log_table = 'data_validation.covertype_classifier_logs_tf'
     project_id = 'mlops-dev-env'
@@ -53,7 +53,7 @@ def test_generate_drift_reports():
 
     logging.getLogger().setLevel(logging.INFO)
 
-    generate_drift_reports(
+    analyze_log_records(
         request_response_log_table=request_response_log_table,
         model=model,
         version=version,

@@ -15,4 +15,3 @@
 # limitations under the License.
 #
 
-from drift_detector.utils.drift_reports import InstanceType

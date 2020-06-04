@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""A utility function to generate statistics and anomaly reports for a time
+"""An Apache beam pipeline that generates statistics and anomaly reports for a time
 series of records in an AI Platform Prediction request-response log.
 """
 
@@ -122,7 +122,7 @@ def _alert_if_anomalies(anomalies: anomalies_pb2.Anomalies, output_path: str):
     return anomalies
 
 
-def generate_drift_reports(
+def analyze_log_records(
         request_response_log_table: str,
         model: str,
         version: str,
@@ -133,16 +133,17 @@ def generate_drift_reports(
         baseline_stats: Optional[statistics_pb2.DatasetFeatureStatisticsList]=None,
         time_window: Optional[timedelta]=None,
         pipeline_options: Optional[PipelineOptions] = None,
-) -> anomalies_pb2.Anomalies:
+): 
     """
-    Computes statistics and anomaly reports for a time series of records 
+    Computes statistics and detects anomalies for a time series of records 
     in an AI Platform Prediction request-response log.
 
-    The function starts an Apache Beam job that calculates results for the full
-    time series of records and (optionally) for a set of time slices within
+    The function starts an Apache Beam job that calculates statistics and detects data anomalies
+    in a time series of records retrieved from an AI Platform Prediction request-response log.
+    Optionally, the function can also calculate stastics for a set of time slices within
     the time series. The output of the job is a statistics_pb2.DatasetFeatureStatisticsList
     protobuf with descriptive statistis and an anomalies_pb2.Anomalies protobuf
-    with anomaly reports. The results are stored in the provided GCS location 
+    with anomaly reports. The protobufs are stored to a GCS location. 
 
     Args:
       request_response_log_table: A full name of a BigQuery table
@@ -164,8 +165,7 @@ def generate_drift_reports(
         more details.
     """
 
-
-    # Generate BigQuery query
+    # Generate a BigQuery query
     end_time = end_time.replace(second=0, microsecond=0)
     start_time = start_time.replace(second=0, microsecond=0)
     query = _generate_query(
@@ -175,7 +175,7 @@ def generate_drift_reports(
         start_time=start_time.strftime('%Y-%m-%dT%H:%M:%S'), 
         end_time=end_time.strftime('%Y-%m-%dT%H:%M:%S'))
 
-    # Configure slicing
+    # Configure slicing for statistics calculations
     stats_options = tfdv.StatsOptions(schema=schema)
     slicing_column = None
     if time_window:
@@ -191,9 +191,11 @@ def generate_drift_reports(
             slicing_feature.name = _SLICING_COLUMN_NAME
             slicing_feature.type = _SLICING_COLUMN_TYPE
 
+    # Configure output paths 
     stats_output_path = os.path.join(output_path, _STATS_FILENAME)
     anomalies_output_path = os.path.join(output_path, _ANOMALIES_FILENAME)
 
+    # Define an start the pipeline
     with beam.Pipeline(options=pipeline_options) as p:
         raw_examples = (p
            | 'GetData' >> beam.io.Read(beam.io.BigQuerySource(query=query, use_standard_sql=True)))

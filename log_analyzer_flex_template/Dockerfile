@@ -20,7 +20,7 @@ WORKDIR ${WORKDIR}
 
 COPY *.py ./
 COPY coders/*.py coders/
-COPY utils/*.py utils/
+COPY log_analyzer/*.py log_analyzer/
 
 RUN pip install -U  tensorflow_data_validation[visualization]==0.22.0 jinja2
 
