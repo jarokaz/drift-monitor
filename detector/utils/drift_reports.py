@@ -104,6 +104,7 @@ def _generate_query(table_name: str, model: str, version: str, start_time: str, 
 
     return query
 
+
 def _alert_if_anomalies(anomalies: anomalies_pb2.Anomalies, output_path: str):
     """
     Analyzes an anomaly protobuf and reports the status.
@@ -114,9 +115,9 @@ def _alert_if_anomalies(anomalies: anomalies_pb2.Anomalies, output_path: str):
     """
 
     if list(anomalies.anomaly_info):
-        logging.log(logging.WARNING, "Anomalies detected. The anomaly report uploaded to: {}".format(output_path))
+        logging.warn("Anomalies detected. The anomaly report uploaded to: {}".format(output_path))
     else:
-        logging.log(logging.INFO, "No anomalies detected.")
+        logging.info("No anomalies detected.")
     
     return anomalies
 
