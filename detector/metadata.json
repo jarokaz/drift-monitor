@@ -11,6 +11,22 @@
       ]
     },
     {
+      "name": "model",
+      "label": "Model name.",
+      "helpText": "A name of the AI Platform Prediction model.",
+      "regexes": [
+        "[-_a-zA-Z0-9]+"
+      ]
+    },
+    {
+      "name": "version",
+      "label": "Model version.",
+      "helpText": "A version of the AI Platform Prediction model.",
+      "regexes": [
+        "[-_a-zA-Z0-9]+"
+      ]
+    },
+    {
       "name": "start_time",
       "label": "Start time.",
       "helpText": "A time window start time in YYYY-MM-DDTHH:MM:SS format.",
@@ -58,6 +74,15 @@
       "regexes": [
         "gs://[-_./a-zA-Z0-9]+"
       ]
+    },
+    {
+        "name": "time_window",
+        "label": "Time window.",
+        "helpText": "A time window to use for time slice calculations. You must use the m or h suffix to designate minutes or hours.",
+        "is_optional": true,
+        "regexes": [
+          "[0-9]+[hm]"
+        ]
     }
   ]
 }
