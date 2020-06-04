@@ -16,7 +16,7 @@
 from setuptools import setup
 
 setup(
-    name='Drift monitor scheduler',
+    name='Log analyzer scheduler',
     version='0.1',
     py_modules=['dms'],
     install_requires=[
@@ -24,6 +24,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        dms=drift_monitor_scheduler:schedule_drift_detector_runs
+        dms=job_scheduler:cli
     ''',
 )
