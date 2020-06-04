@@ -36,6 +36,9 @@ from tensorflow_data_validation import load_schema_text
 
 from utils.drift_reports import generate_drift_reports
 
+
+_SETUP_FILE = './setup.py'
+
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
 
@@ -125,6 +128,7 @@ if __name__ == '__main__':
             time_window = datetime.timedelta(minutes=int(known_args.time_window[0:-1]))
 
     pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options.view_as(SetupOptions).setup_file = _SETUP_FILE
 
     anomalies = generate_drift_reports(
         request_response_log_table=known_args.request_response_log_table,

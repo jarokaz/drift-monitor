@@ -31,7 +31,7 @@ from utils.drift_reports import generate_drift_reports, _validate_request_respon
 
 def test_generate_drift_reports():
 
-    request_response_log_table = 'data_validation.test1'
+    request_response_log_table = 'data_validation.covertype_classifier_logs_tf'
     project_id = 'mlops-dev-env'
     model = 'covertype_tf'
     version = 'v3'
@@ -53,7 +53,7 @@ def test_generate_drift_reports():
 
     logging.getLogger().setLevel(logging.INFO)
 
-    generate_drift_reports(
+    response = generate_drift_reports(
         request_response_log_table=request_response_log_table,
         model=model,
         version=version,
@@ -64,6 +64,8 @@ def test_generate_drift_reports():
         schema=schema, 
         baseline_stats=baseline_stats,
         pipeline_options=pipeline_options)
+
+    print(response)
 
 def test_validate_request_response_log_schema():
 

@@ -18,7 +18,6 @@ ARG WORKDIR=/dataflow/template
 RUN mkdir -p ${WORKDIR}
 WORKDIR ${WORKDIR}
 
-COPY run.sh ./
 COPY *.py ./
 COPY coders/*.py coders/
 COPY utils/*.py utils/
