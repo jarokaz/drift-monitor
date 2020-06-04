@@ -29,31 +29,38 @@ from google.protobuf import timestamp_pb2
 
 
 _SCHEMA_FILE_PATH = './setup.py'
-_JOB_NAME_PREFIX = 'data-drift-detector'
+_JOB_NAME_PREFIX = 'log-analyzer'
 
-def _prepare_drift_detector_request_body(
+def _prepare_log_analyzer_request_body(
     job_name: Text,
     template_path: Text,
+    model: Text,
+    version: Text,
     log_table: Text,
     start_time: Text ,
     end_time: Text,
     output_location: Text,
     schema_location: Text,
-    baseline_stats_location: Text
+    baseline_stats_location: Text,
+    time_window: Text
 ) -> Dict:
-    """Prepares a body of the data drift Dataflow template run request."""
+    """Prepares a body of the log analyzer Dataflow template run request."""
 
     parameters = {
         'request_response_log_table': log_table,
+        'model': model,
+        'version': version,
         'start_time': start_time,
         'end_time': end_time,
         'output_path': output_location,
-        'schema_file': schema_location,
-        'setup_file': _SCHEMA_FILE_PATH
+        'schema_file': schema_location
     }
 
     if baseline_stats_location:
-        parameters['baseline_stats_path'] = baseline_stats_location 
+        parameters['baseline_stats_file'] = baseline_stats_location 
+    
+    if time_window:
+        parameters['time_window'] = time_window
     
     body = {
         'launch_parameter': 
@@ -65,18 +72,21 @@ def _prepare_drift_detector_request_body(
 
     return body
     
-def run_drift_detector(
+def run_log_analyzer(
     project_id: Text,
     region: Text,
     template_path: Text,
+    model: Text,
+    version: Text,
     log_table: Text,
     start_time: datetime.datetime,
     end_time: datetime.datetime,
     output_location: Text,
     schema_location: Text,
     baseline_stats_location: Optional[Text]=None,
+    time_window: Optional[Text]=None
 ) -> Dict:
-    """Runs the drift detector Dataflow template."""
+    """Runs the log analyzer Dataflow template."""
 
     service = googleapiclient.discovery.build('dataflow', 'v1b3')
 
@@ -86,15 +96,18 @@ def run_drift_detector(
     end_time = end_time.isoformat(sep='T', timespec='seconds')
     output_location = '{}/{}_{}_{}'.format(output_location, time_stamp, start_time, end_time)
 
-    body = _prepare_drift_detector_request_body(
+    body = _prepare_log_analyzer_request_body(
         job_name=job_name,
         template_path=template_path,
+        model=model,
+        version=version,
         log_table=log_table,
         start_time=start_time,
         end_time=end_time,
         output_location=output_location,
         schema_location=schema_location,
-        baseline_stats_location=baseline_stats_location
+        baseline_stats_location=baseline_stats_location,
+        time_window=time_window
     )
 
     request = service.projects().locations().flexTemplates().launch(
@@ -107,21 +120,24 @@ def run_drift_detector(
     return response
 
 
-def schedule_drift_detector(
+def schedule_log_analyzer(
     task_queue: Text,
     service_account: Text,
     schedule_time: datetime.datetime,
     project_id: Text,
     region: Text,
     template_path: Text,
+    model: Text,
+    version: Text,
     log_table: Text,
     start_time: datetime.datetime,
     end_time: datetime.datetime,
     output_location: Text,
     schema_location: Text,
     baseline_stats_location: Optional[Text]=None,
+    time_window: Optional[Text]=None
 ) -> Dict:
-    """Creates a Cloud Task that submits a run of the drift detector template."""
+    """Creates a Cloud Task that submits a run of the log analyzer template."""
 
     service_uri = 'https://dataflow.googleapis.com/v1b3/projects/{}/locations/{}/flexTemplates:launch'.format(
         project_id, region)
@@ -132,15 +148,18 @@ def schedule_drift_detector(
     end_time = end_time.isoformat(sep='T', timespec='seconds')
     output_location = '{}/{}_{}_{}'.format(output_location, time_stamp, start_time, end_time)
 
-    body = _prepare_drift_detector_request_body(
+    body = _prepare_log_analyzer_request_body(
         job_name=job_name,
         template_path=template_path,
+        model=model,
+        version=version,
         log_table=log_table,
         start_time=start_time,
         end_time=end_time,
         output_location=output_location,
         schema_location=schema_location,
-        baseline_stats_location=baseline_stats_location
+        baseline_stats_location=baseline_stats_location,
+        time_window=time_window
     )
 
     task = {
