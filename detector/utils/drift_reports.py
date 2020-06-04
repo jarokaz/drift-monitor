@@ -155,8 +155,8 @@ def generate_drift_reports(
         table_name=request_response_log_table, 
         model=model, 
         version=version, 
-        start_time=start_time.isoformat(sep='T', timespec='seconds'), 
-        end_time=end_time.isoformat(sep='T', timespec='seconds'))
+        start_time=start_time.strftime('%Y-%m-%dT%H:%M:%S'), 
+        end_time=end_time.strftime('%Y-%m-%dT%H:%M:%S'))
 
     # Configure slicing
     stats_options = tfdv.StatsOptions(schema=schema)

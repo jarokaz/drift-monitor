@@ -107,10 +107,6 @@ class InstanceCoder(beam.DoFn):
 
         raw_data = json.loads(log_record[_RAW_DATA_COLUMN])
 
-        print(log_record)
-
-        raise ValueError("stop")
-
         for raw_instance in raw_data[_INSTANCES_KEY]:
             instance = self._parse_raw_instance(raw_instance)
             if self._slicing_column:
