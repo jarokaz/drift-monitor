@@ -63,13 +63,13 @@ if __name__ == '__main__':
         dest='start_time',
         type=str,
         required=True,
-        help='The beginning of a time series of log records in the ISO datetime format')
+        help='The beginning of a time series of log records in the ISO datetime format: YYYY-MM-DDTHH:MM:SS')
     parser.add_argument(
         '--end_time',
         dest='end_time',
         type=str,
         required=True,
-        help='The end of a time series of log records in the ISO datetime format')
+        help='The end of a time series of log records in the ISO datetime format: YYYY-MM-DDTHH:MM:SS')
     parser.add_argument(
         '--output_path',
         dest='output_path',
@@ -103,8 +103,14 @@ if __name__ == '__main__':
 
     schema = load_schema_text(known_args.schema_file)
 
-    start_time = datetime.datetime.fromisoformat(known_args.start_time)
-    end_time = datetime.datetime.fromisoformat(known_args.end_time) 
+    start_time = datetime.datetime.strptime(known_args.start_time, '%Y-%m-%dT%H:%M:%S')
+    end_time = datetime.datetime.strptime(known_args.end_time, '%Y-%m-%dT%H:%M:%S') 
+
+    if not start_time: 
+        raise ValueError("Wrong format of start_time: {}".format(known_args.start_time))
+
+    if not end_time: 
+        raise ValueError("Wrong format of endtime_time: {}".format(known_args.end_time))
 
     if start_time >= end_time:
         raise ValueError("The end_time cannot be earlier than the start_time")
