@@ -24,6 +24,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        dms=job_scheduler:cli
+        dms=cli:cli
     ''',
 )

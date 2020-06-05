@@ -39,9 +39,9 @@ def cli():
 @click.option('--schema',  envvar='DM_SCHEMA', help='A GCS location of the schema file', required=True)
 @click.option('--baseline_stats', envvar='DM_STATS', help='A GCS location of the baseline stats file')
 @click.option('--time_window', envvar='DM_TIME_WINDOW', help='A time window for slice calculations')
-def run(template_path, project, region, log_table, start_time,
-    end_time, output, schema, baseline_stats
-):
+def run(template_path, model, version, project, region, log_table, start_time,
+    end_time, output, schema, baseline_stats, time_window):
+
     response = run_log_analyzer(
         project_id=project,
         region=region,
@@ -56,12 +56,12 @@ def run(template_path, project, region, log_table, start_time,
         baseline_stats_location=baseline_stats,
         time_window=time_window
     )
-    logging.log(logging.INFO, "Submitted a log analyzer template run: DataFlow Job ID={}".format(
+    print("Submitted a log analyzer template run: DataFlow Job ID={}".format(
         response['job']['id'])) 
 
 @cli.command()
 @click.option('--template_path', envvar='DM_TEMPLATE_PATH', help='A GCS path to the log analyzer flex template', required=True)
-@click.option('--execute_time', envvar='DM_EXECUTE_TIME', help='The log analyzer template will be triggered at this time', required=True)
+@click.option('--execute_time', envvar='DM_EXECUTE_TIME', help='The log analyzer template will be triggered at this time', required=True, type=click.DateTime())
 @click.option('--queue', envvar='DM_QUEUE', help='A Cloud Tasks queue to use for scheduling', required=True)
 @click.option('--account', envvar='DM_ACCOUNT', help='An email address of a service account to use for scheduling', required=True)
 @click.option('--project', envvar='DM_PROJECT_ID', help='A GCP project ID', required=True)
@@ -75,13 +75,8 @@ def run(template_path, project, region, log_table, start_time,
 @click.option('--schema',  envvar='DM_SCHEMA', help='A GCS location of the schema file', required=True)
 @click.option('--baseline_stats', envvar='DM_STATS', help='A GCS location of the baseline stats file')
 @click.option('--time_window', envvar='DM_TIME_WINDOW', help='A time window for slice calculations')
-def schedule(template_path, queue, account, execute_time, project,
-    region, log_table, start_time, end_time, output, schema, baseline_stats
-):
-    print(execute_time)
-    if execute_time < datetime.datetime.now():
-        logging.log(logging.INFO, "Cannot schedule a task in the past. Exiting ...")
-        return
+def schedule(template_path, model, version, queue, account, execute_time, project,
+    region, log_table, start_time, end_time, output, schema, baseline_stats, time_window):
 
     response = schedule_log_analyzer(
         task_queue=queue,
@@ -101,9 +96,7 @@ def schedule(template_path, queue, account, execute_time, project,
         time_window=time_window
     ) 
 
-    logging.log(logging.INFO, "Scheduled the log analyzer template to run at: {}".format(
-        execute_time.isoformat(timespec='seconds'))) 
+    print("Scheduled the log analyzer template to run at: {}".format( execute_time)) 
 
 if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.INFO)
     cli()
