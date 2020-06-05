@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A command line interface to trigger and schedule drift detector runs.  """
+"""A command line interface to trigger and schedule log analyzer runs.  """
 
 import click
 import datetime
